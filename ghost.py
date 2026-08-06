@@ -116,16 +116,16 @@ class Ghost:
         if now - self.last_move < GHOST_SPEED:
             return
 
-        # if flee:
-        #     moved = self._move_away(maze, player_cord)
-        # else:
-        #     moved = random.random() < GHOST_CHASE_CHANCE and self._move_toward(maze, player_cord)
+        if flee:
+            moved = self._move_away(maze, player_cord)
+        else:
+            moved = random.random() < GHOST_CHASE_CHANCE and self._move_toward(maze, player_cord)
 
-        # if not moved:
-        #     moved = self._move_random(maze)
+        if not moved:
+            moved = self._move_random(maze)
 
-        # if moved:
-        #     self.rect = self.ghost.get_rect(center=cell_to_pixel_center(self.x, self.y, self.offset_x))
+        if moved:
+            self.rect = self.ghost.get_rect(center=cell_to_pixel_center(self.x, self.y, self.offset_x))
 
         self.last_move = now
 

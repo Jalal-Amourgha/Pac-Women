@@ -12,6 +12,7 @@ from player import *
 from superGum import *
 from text import *
 from utils import *
+from parser import *
 
 
 
@@ -24,18 +25,16 @@ class Game:
         self.running = True
 
         self.highscore_filename = config['highscore_filename']
-        self.levels = config['levels']
+        self.levels = config['level']
         self.initial_lives = config['lives']
         self.p_p_p = config['points_per_pacgum']
         self.p_p_s_p = config['points_per_super_pacgum']
         self.p_p_g = config['points_per_ghost']
         self.level_time = config.get('level_max_time', 900000)
 
-        # PERF: cache fonts instead of constructing a new pygame.font.Font
-        # from disk on every single draw call.
         self._fonts = {}
 
-        self.state = State.HIGHSCORES
+        self.state = State.MENU
         self.level = 0
         self.lives = self.initial_lives
         self.total_score = 0
@@ -134,16 +133,12 @@ class Game:
     def _extract_coords(self):
         self.corner_coords = [
             (0, 0),
-            # (self.cols - 1, 0),
-            # (0, self.rows - 1),
-            # (self.cols - 1, self.rows - 1)
+            (self.cols - 1, 0),
+            (0, self.rows - 1),
+            (self.cols - 1, self.rows - 1)
             ]
         self._extract_pattern_42()
 
-        # FIX: this previously looped `x in range(rows)` / `y in
-        # range(cols)`, backwards from the (x=column, y=row) convention
-        # used everywhere else (can_move indexes maze[y][x]). It only
-        # happened to work because every configured level was square.
         all_coords = {(x, y) for x in range(self.cols) for y in range(self.rows)}
 
         self.gums_coords = all_coords - self.pattern_42_coords - set(self.corner_coords)
@@ -174,9 +169,6 @@ class Game:
 
 
     def _load_highscores(self):
-        # FIX: the old version called sys.exit() if the file was missing,
-        # crashing the whole game the first time it ran. Missing/corrupt
-        # file now just means "no scores yet".
         try:
             with open(self.highscore_filename) as f:
                 return json.load(f).get('players', [])
@@ -234,8 +226,6 @@ class Game:
             self._save_highscore(self.name_input.text.strip(), self.pending_score)
             self.state = State.MENU
 
- 
-
     def update(self):
         if self.state != State.PLAYING:
             return
@@ -286,14 +276,14 @@ class Game:
                 ghost.x = self.corner_coords[ghost.id][0]
                 ghost.y = self.corner_coords[ghost.id][1]
             else:
-                # self.lives -= 1
+                self.lives -= 1
                 if self.lives <= 0:
                     self.total_score += self.player.score
                     self._end_run(False)
-                # else:
-                #     self.player.x, self.player.y = (3, 3)
-                #     self.player.rect = self.player.image.get_rect(
-                #         center=cell_to_pixel_center(3, 3, self.offset_x))
+                else:
+                    self.player.x, self.player.y = (3, 3)
+                    self.player.rect = self.player.image.get_rect(
+                        center=cell_to_pixel_center(3, 3, self.offset_x))
             break
 
         if self.state != State.PLAYING:
@@ -428,16 +418,16 @@ class Game:
         self.screen.blit(prompt_surf, prompt_surf.get_rect(center=(SCREEN_WIDTH // 2, 230)))
 
 
-        self.quit_to_menu_btn.rect = pygame.Rect(
-            self.quit_to_menu_btn.x,
+        self.back_btn.rect = pygame.Rect(
+            self.back_btn.x,
             400,
-            self.quit_to_menu_btn.width,
-            self.quit_to_menu_btn.height)
+            self.back_btn.width,
+            self.back_btn.height)
 
 
         self.name_input.draw(self.screen)
         self.submit_btn.draw(self.screen)
-        self.quit_to_menu_btn.draw(self.screen)
+        self.back_btn.draw(self.screen)
 
     def _draw_game(self):
         self.screen.fill((0, 0, 0))
@@ -494,7 +484,7 @@ class Game:
 if __name__ == "__main__":
     config = {
         "highscore_filename": "highscores.json",
-        "levels": [
+        "level": [
             {"width": 23, "height": 14},
             {"width": 11, "height": 11},
         ],
@@ -504,4 +494,6 @@ if __name__ == "__main__":
         "points_per_ghost": 200,
         "level_max_time": 90000,
     }
+    # config: Parser = Parser('config.json').config
+
     Game(config).run()
