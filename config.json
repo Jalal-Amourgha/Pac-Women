@@ -1,0 +1,27 @@
+{
+  "window_width": 1280,
+  "window_height": 720,
+  "fullscreen": false,
+
+  "lives": 2000,
+  "levels": 10,
+  "level_max_time": 90,
+
+  "maze_width": 31,
+  "maze_height": 31,
+  "seed": 42,
+
+  "ghost_speed": 3,
+  "ghost_respawn_time": 5,
+  "ghost_count": 4,
+
+  "player_speed": 4,
+
+  "points_per_pacgum": 10,
+  "points_per_super_pacgum": 50,
+  "points_per_ghost": 200,
+
+  "highscore_filename": "highscores.json",
+
+  "cheats": true
+}
