@@ -1,5 +1,7 @@
 import pygame
+
 from utils import *
+
 
 class Ghost:
     def __init__(self, id, x, y, offset_x):
@@ -12,20 +14,29 @@ class Ghost:
         self.y = y
         self.offset_x = offset_x
         self.last_move = 0
-        self.rect = self.ghost.get_rect(center=cell_to_pixel_center(self.x, self.y, self.offset_x))
+        self.rect = self.ghost.get_rect(
+            center=cell_to_pixel_center(self.x, self.y, self.offset_x)
+        )
         self.died_time = None
 
     def _setup_ghosts(self):
-        forms = dict()
+        forms: dict = {}
         for form in ("UP", "RIGHT", "DOWN", "LEFT"):
-            img_path = f'./assets/ghost_{self.id + 1}_{form}.jpg'
+            # TODO: THIS WILL CRASH SINCE ITS CASE SENSITIVE MISMATCH
+            # AGAIN THE IMAGE NAMES
+            img_path: str = f"./assets/ghost_{self.id + 1}_{form}.jpg"
+
             ghost_form_img = pygame.image.load(img_path).convert_alpha()
             forms[form] = pygame.transform.scale(ghost_form_img, (25, 25))
 
-        forms['edible_1'] = pygame.transform.scale(
-            pygame.image.load('./assets/edible_1.jpg').convert_alpha(), (25, 25))
-        forms['edible_2'] = pygame.transform.scale(
-            pygame.image.load('./assets/edible_2.jpg').convert_alpha(), (25, 25))
+        forms["edible_1"] = pygame.transform.scale(
+            pygame.image.load("./assets/edible_1.jpg").convert_alpha(),
+            (25, 25),
+        )
+        forms["edible_2"] = pygame.transform.scale(
+            pygame.image.load("./assets/edible_2.jpg").convert_alpha(),
+            (25, 25),
+        )
 
         return forms
 
@@ -48,7 +59,10 @@ class Ghost:
                     continue
 
                 nx, ny = x + dx, y + dy
-                if not (0 <= nx < cols and 0 <= ny < rows) or (nx, ny) in visited:
+                if (
+                    not (0 <= nx < cols and 0 <= ny < rows)
+                    or (nx, ny) in visited
+                ):
                     continue
 
                 new_path = path + [(nx, ny)]
@@ -78,7 +92,7 @@ class Ghost:
         return self._step_to(nx, ny)
 
     def _move_away(self, maze, player_cord):
-       
+
         best = None
         best_dist = -1
         options = DIRECTIONS[:]
@@ -119,13 +133,17 @@ class Ghost:
         if flee:
             moved = self._move_away(maze, player_cord)
         else:
-            moved = random.random() < GHOST_CHASE_CHANCE and self._move_toward(maze, player_cord)
+            moved = random.random() < GHOST_CHASE_CHANCE and self._move_toward(
+                maze, player_cord
+            )
 
         if not moved:
             moved = self._move_random(maze)
 
         if moved:
-            self.rect = self.ghost.get_rect(center=cell_to_pixel_center(self.x, self.y, self.offset_x))
+            self.rect = self.ghost.get_rect(
+                center=cell_to_pixel_center(self.x, self.y, self.offset_x)
+            )
 
         self.last_move = now
 

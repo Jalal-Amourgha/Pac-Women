@@ -1,0 +1,6 @@
+__pycache__
+mazegenerator/__pycache__
+mazegenerator/__pycache__/*
+.venv
+.python-version
+uv.lock

@@ -1,0 +1,10 @@
+[project]
+name = "pac-women"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+requires-python = ">=3.10.13"
+dependencies = ["pygame>=2.6.1"]
+
+[tool.ruff]
+line-length = 79
