@@ -1,15 +1,8 @@
-import random
-import pygame
-from collections import deque
-from mazegenerator.mazegenerator import MazeGenerator
-import json
-
-
 CELL_SIZE = 30
 WALL_SIZE = 4
 
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 1024
+SCREEN_HEIGHT = 768
 
 OFFSET_Y = 170
 
@@ -45,8 +38,11 @@ class State:
     ENTER_NAME = "enter_name"
 
 
-
 def can_move(maze, x, y, direction):
+    """
+    Returns true if the player can move in the given direction
+    """
+
     cell = maze[y][x]
 
     if direction == "UP":
