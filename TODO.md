@@ -4,5 +4,5 @@
 - Fix Mypy
 - packaging
 - Host The Game in Itcho.io
-
+- DYNAMIC STRETCHING WINDOW
 - DEADLINE 28/08/2026 !!!!!!!!!!!!!
