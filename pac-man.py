@@ -351,7 +351,8 @@ class Game:
                 ghost.x = self.corner_coords[ghost.id][0]
                 ghost.y = self.corner_coords[ghost.id][1]
             else:
-                self.lives -= 1
+                pass
+                # self.lives -= 1
                 # if self.lives <= 0:
                 #     self.total_score += self.player.score
                 #     self._end_run(False)

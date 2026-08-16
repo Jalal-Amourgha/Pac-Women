@@ -25,7 +25,7 @@ class Ghost:
         for form in ("UP", "RIGHT", "DOWN", "LEFT"):
             # TODO: THIS WILL CRASH SINCE ITS CASE SENSITIVE MISMATCH
             # AGAIN THE IMAGE NAMES
-            img_path: str = f"./assets/ghost_{self.id + 1}_{form}.jpg"
+            img_path: str = f"./assets/ghost_{self.id + 1}_{form.lower()}.jpg"
 
             ghost_form_img = pygame.image.load(img_path).convert_alpha()
             forms[form] = pygame.transform.scale(ghost_form_img, (25, 25))
