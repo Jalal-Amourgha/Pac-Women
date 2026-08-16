@@ -7,7 +7,6 @@ from custom_print import print_yellow
 from drawing import *
 from ghost import *
 from mazegenerator.mazegenerator import MazeGenerator
-from parser import *
 from player import *
 from superGum import *
 from text import *
