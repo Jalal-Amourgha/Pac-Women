@@ -1,5 +1,5 @@
 import pygame
-from utils import *
+from utils import cell_to_pixel_center
 
 class SuperGum:
     def __init__(self, id, x, y, offset_x):

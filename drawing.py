@@ -1,5 +1,5 @@
 import pygame
-from utils import *
+from utils import CELL_SIZE, OFFSET_Y, WALL_SIZE
 
 class Drawing:
     def __init__(self, offset_x, super_gums_coords, pattern_42_coords):

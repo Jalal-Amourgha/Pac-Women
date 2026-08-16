@@ -1,6 +1,7 @@
 import json
 
 import pygame
+import random
 
 from button import *
 from drawing import *
@@ -242,7 +243,7 @@ class Game:
             # User inside menu
             if self.state == State.MENU:
                 self._handle_menu_event(event)
-            elif self.state in (State.INSTRUCTIONS, State.wIGHSCORES):
+            elif self.state in (State.INSTRUCTIONS, State.HIGHSCORES):
                 if self.back_btn.is_clicked(event):
                     self.state = State.MENU
             elif self.state == State.PLAYING:
@@ -351,14 +352,14 @@ class Game:
                 ghost.y = self.corner_coords[ghost.id][1]
             else:
                 self.lives -= 1
-                if self.lives <= 0:
-                    self.total_score += self.player.score
-                    self._end_run(False)
-                else:
-                    self.player.x, self.player.y = (3, 3)
-                    self.player.rect = self.player.image.get_rect(
-                        center=cell_to_pixel_center(3, 3, self.offset_x)
-                    )
+                # if self.lives <= 0:
+                #     self.total_score += self.player.score
+                #     self._end_run(False)
+                # else:
+                #     self.player.x, self.player.y = (3, 3)
+                #     self.player.rect = self.player.image.get_rect(
+                #         center=cell_to_pixel_center(3, 3, self.offset_x)
+                #     )
             break
 
         if self.state != State.PLAYING:

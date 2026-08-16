@@ -1,6 +1,6 @@
 import pygame
 
-from utils import *
+from utils import cell_to_pixel_center, can_move, PLAYER_SPEED, ROTATION_FOR_DIRECTION
 
 
 class Player:

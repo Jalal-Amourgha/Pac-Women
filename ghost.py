@@ -1,6 +1,7 @@
 import pygame
-
-from utils import *
+import random
+from collections import deque
+from utils import cell_to_pixel_center, can_move, DIRECTIONS, GHOST_CHASE_CHANCE, GHOST_SPEED
 
 
 class Ghost:

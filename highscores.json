@@ -63,6 +63,10 @@
     {
       "username": "Player",
       "score": 0
+    },
+    {
+      "username": "Player",
+      "score": 0
     }
   ]
 }
