@@ -1,0 +1,36 @@
+# TODO: COMPLETE ME	
+
+[window]
+width = 1280
+height = 720
+seed = 42
+pacgum = 42
+
+[player]
+lives = 3
+points_per_ghost = 200
+points_per_pacgum = 15
+points_per_super_pacgum = 50
+highscore_filename = "highscores.json"
+level_max_time = 90000
+
+[levels]
+maps = [
+  {width = 23, height = 14},
+  {width = 11, height = 11},
+]
+
+
+
+# config = {
+#     "highscore_filename": "highscores.json",
+#     "level": [
+#         {"width": 23, "height": 14},
+#         {"width": 11, "height": 11},
+#     ],
+#     "lives": 3,
+#     "points_per_pacgum": 15,
+#     "points_per_super_pacgum": 50,
+#     "points_per_ghost": 200,
+#     "level_max_time": 90000,
+# }

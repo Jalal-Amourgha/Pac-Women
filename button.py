@@ -4,11 +4,11 @@ import pygame
 class Button:
     def __init__(
         self,
-        text,
-        x,
-        y,
-        width,
-        height,
+        text: str,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
         font,
         text_color: str = "black",
         bg_color: str = "yellow",
@@ -26,6 +26,7 @@ class Button:
         self.text_rect = self.text_surf.get_rect(center=self.rect.center)
 
     def draw(self, surface):
+        """"""
         mouse_pos = pygame.mouse.get_pos()
 
         if self.rect.collidepoint(mouse_pos):
@@ -42,6 +43,8 @@ class Button:
         surface.blit(text_surf, text_rect)
 
     def is_clicked(self, event):
+        """"""
+
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.rect.collidepoint(event.pos):
                 return True

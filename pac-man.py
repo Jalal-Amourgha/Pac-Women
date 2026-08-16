@@ -1,17 +1,17 @@
 import json
 
 import pygame
-import random
 
-from button import *
+from button import Button
+from custom_print import print_yellow
 from drawing import *
 from ghost import *
 from mazegenerator.mazegenerator import MazeGenerator
-from parser import *
 from player import *
 from superGum import *
 from text import *
 from utils import *
+from utils import State, read_config
 
 # NOTE: DO NOT IMPORT BLINDLY WITH '*', USE SPECIFIC MODULES
 
@@ -21,15 +21,19 @@ class Game:
     Main game class
     """
 
-    def __init__(self, config):
+    def __init__(self, config: dict):
         """
         Initialize the game
         """
 
+        # Extract window size
+        self.SCREEN_WIDTH = config["window"]["width"]
+        self.SCREEN_HEIGHT = config["window"]["height"]
+
         pygame.init()
-        # Create the screen
+        # Create the screen (display serface)
         self.screen = pygame.display.set_mode(
-            size=(SCREEN_WIDTH, SCREEN_HEIGHT)
+            size=(self.SCREEN_WIDTH, self.SCREEN_HEIGHT)
         )
         pygame.display.set_caption(title="Pac-Man")
 
@@ -37,18 +41,18 @@ class Game:
         self.clock = pygame.time.Clock()
 
         self.running = True
-        self.highscore_filename = config["highscore_filename"]
-        self.levels = config["level"]
-        self.initial_lives = config["lives"]
-        self.p_p_p = config["points_per_pacgum"]
-        self.p_p_s_p = config["points_per_super_pacgum"]
-        self.p_p_g = config["points_per_ghost"]
-        self.level_time = config.get("level_max_time", 900000)
+        self.highscore_filename = config["player"]["highscore_filename"]
+        self.levels: list[dict[str, int]] = config["levels"]["maps"]
+        self.initial_lives = config["player"]["lives"]
+        self.p_p_p = config["player"]["points_per_pacgum"]
+        self.p_p_s_p = config["player"]["points_per_super_pacgum"]
+        self.p_p_g = config["player"]["points_per_ghost"]
+        self.level_time = config["player"]["level_max_time"]
 
         self._fonts: dict = {}
 
         self.state = State.MENU
-        self.level: int = 0
+        self.level_number: int = 0
         self.lives = self.initial_lives
         self.total_score: int = 0
         self.pending_score: int = 0
@@ -84,7 +88,14 @@ class Game:
         """
         big = self._font("./fonts/pacfont/pac-font.ttf", 20)
 
-        self.play_btn = Button("Start Game", 300, 200, 220, 60, big)
+        self.play_btn = Button(
+            "Start Game",
+            300,
+            200,
+            220,
+            60,
+            big,
+        )
         self.instructions_btn = Button("How To Play", 300, 280, 220, 60, big)
         self.leader_btn = Button("High Scorers", 300, 360, 220, 60, big)
         self.exit_btn = Button("Exit Game", 300, 440, 220, 60, big)
@@ -194,17 +205,17 @@ class Game:
         """(Re)builds the maze, player, ghosts, and pellets for
         self.level. Used both for starting a fresh run and for advancing
         to the next level within a run."""
-        width = self.levels[self.level]["width"]
-        height = self.levels[self.level]["height"]
+        width = self.levels[self.level_number]["width"]
+        height = self.levels[self.level_number]["height"]
         self.cols, self.rows = width, height
-        self.offset_x = (SCREEN_WIDTH - width * CELL_SIZE) // 2
+        self.offset_x = (self.SCREEN_WIDTH - width * CELL_SIZE) // 2
         self.style_42 = width >= 14 and height >= 14
 
         generator = MazeGenerator(size=(width, height))
         self.maze = generator.maze
 
         self._extract_coords()
-        self.drawing = Drawing(
+        self.drawing: Drawing = Drawing(
             self.offset_x, self.corner_coords, self.pattern_42_coords
         )
 
@@ -412,12 +423,19 @@ class Game:
 
         pygame.display.flip()
 
-    def _draw_title(self, text="Pac Women", color="yellow", creator=False):
+    def _draw_title(
+        self,
+        text: str = "Pac Women",
+        color: str = "yellow",
+        creator: bool = False,
+    ):
         """Draws the game title"""
 
         text_font = self._font("./fonts/pacfont/pac-font.ttf", 30)
         game_name = text_font.render(text, False, color)
-        game_name_rect = game_name.get_rect(center=(SCREEN_WIDTH // 2, 40))
+        game_name_rect = game_name.get_rect(
+            center=(self.SCREEN_WIDTH // 2, 40)
+        )
         self.screen.blit(game_name, game_name_rect)
 
         if creator:
@@ -427,19 +445,21 @@ class Game:
                 "jamourgh & aarid", False, color
             )
             creator_rect = creator_name.get_rect(
-                center=(SCREEN_WIDTH // 2, 80)
+                center=(self.SCREEN_WIDTH // 2, 80)
             )
             self.screen.blit(creator_name, creator_rect)
 
     def _draw_menu(self):
         self.screen.fill((0, 0, 0))  # Clear screen with black background
         self._draw_title(creator=True)
-        for btn in (
+        menu_buttons = [
             self.play_btn,
             self.instructions_btn,
             self.leader_btn,
             self.exit_btn,
-        ):
+        ]
+
+        for btn in menu_buttons:
             btn.draw(self.screen)
 
     def _draw_instructions(self):
@@ -458,7 +478,7 @@ class Game:
         text_font = self._font("./fonts/press/PressStart2P.ttf", 14)
         for i, line in enumerate(lines):
             surf = text_font.render(line, False, "white")
-            rect = surf.get_rect(center=(SCREEN_WIDTH // 2, 150 + i * 40))
+            rect = surf.get_rect(center=(self.SCREEN_WIDTH // 2, 150 + i * 40))
             self.screen.blit(surf, rect)
 
         self.back_btn.draw(self.screen)
@@ -474,7 +494,7 @@ class Game:
             surf = text_font.render(
                 "No scores yet - be the first!", False, "white"
             )
-            rect = surf.get_rect(center=(SCREEN_WIDTH // 2, 150))
+            rect = surf.get_rect(center=(self.SCREEN_WIDTH // 2, 150))
             self.screen.blit(surf, rect)
         else:
             for idx, player in enumerate(players[:10]):
@@ -516,12 +536,14 @@ class Game:
             f"Final score: {self.pending_score}", False, "white"
         )
         self.screen.blit(
-            score_surf, score_surf.get_rect(center=(SCREEN_WIDTH // 2, 200))
+            score_surf,
+            score_surf.get_rect(center=(self.SCREEN_WIDTH // 2, 200)),
         )
 
         prompt_surf = text_font.render("Enter your name:", False, "white")
         self.screen.blit(
-            prompt_surf, prompt_surf.get_rect(center=(SCREEN_WIDTH // 2, 230))
+            prompt_surf,
+            prompt_surf.get_rect(center=(self.SCREEN_WIDTH // 2, 230)),
         )
 
         self.back_btn.rect = pygame.Rect(
@@ -533,6 +555,7 @@ class Game:
         self.back_btn.draw(self.screen)
 
     def _draw_game(self):
+        """"""
         self.screen.fill((0, 0, 0))
         self._draw_title(creator=True)
         self._draw_level_info()
@@ -562,7 +585,9 @@ class Game:
             f"Level: {self.level + 1}/{len(self.levels)}", False, "white"
         )
 
-        # pygame.draw.line(self.screen, 'white', (0, 170), (SCREEN_WIDTH, 170), 3)
+        # pygame.draw.line(
+        #     self.screen, "white", (0, 170), (self.SCREEN_WIDTH, 170), 3
+        # )
         self.screen.blit(score_surf, score_surf.get_rect(topleft=(100, 130)))
         self.screen.blit(
             lives_surf, lives_surf.get_rect(topleft=(100 + 150, 130))
@@ -575,15 +600,19 @@ class Game:
         )
 
     def _draw_pause_overlay(self):
+        """"""
+
         overlay = pygame.Surface(
-            (SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA
+            (self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SRCALPHA
         )
         overlay.fill((0, 0, 0, 180))
         self.screen.blit(overlay, (0, 0))
 
         text_font = self._font("./fonts/pacfont/pac-font.ttf", 40)
         text = text_font.render("Paused", False, "yellow")
-        self.screen.blit(text, text.get_rect(center=(SCREEN_WIDTH // 2, 150)))
+        self.screen.blit(
+            text, text.get_rect(center=(self.SCREEN_WIDTH // 2, 150))
+        )
 
         self.paus_btn.draw(self.screen)
         self.quit_to_menu_btn.draw(self.screen)
@@ -593,24 +622,14 @@ class Game:
             self.events()
             self.update()
             self.draw()
-            self.clock.tick(30)
+            # Limit to 60 frames per second
+            self.clock.tick(60)
 
         pygame.quit()
 
 
 if __name__ == "__main__":
-    config = {
-        "highscore_filename": "highscores.json",
-        "level": [
-            {"width": 23, "height": 14},
-            {"width": 11, "height": 11},
-        ],
-        "lives": 3,
-        "points_per_pacgum": 15,
-        "points_per_super_pacgum": 50,
-        "points_per_ghost": 200,
-        "level_max_time": 90000,
-    }
     # config: Parser = Parser('config.json').config
-
+    config = read_config("game-config.toml")
     Game(config).run()
+    print_yellow("Thanks for playing!")
