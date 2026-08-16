@@ -1,13 +1,18 @@
 import pygame
 
-from utils import cell_to_pixel_center, can_move, PLAYER_SPEED, ROTATION_FOR_DIRECTION
+from utils import (
+    PLAYER_SPEED,
+    ROTATION_FOR_DIRECTION,
+    can_move,
+    cell_to_pixel_center,
+)
 
 
 class Player:
     """Player class for Pac-Man."""
 
     def __init__(self, x, y, offset_x, p_p_p=10, gums_coords=None):
-        """"""
+        """Initialize the player."""
         self.base_image = pygame.image.load(
             "./assets/player_1.jpg"
         ).convert_alpha()
