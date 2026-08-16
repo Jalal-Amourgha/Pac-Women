@@ -92,8 +92,9 @@ def read_config(path: str) -> dict:
     except FileNotFoundError:
         print_red("Error: Config file not found")
         exit(1)
-    except toml.TomlDecodeError:
-        print_red("Error: Invalid config file")
+    except toml.TomlDecodeError as e:
+        print_red("Error: Invalid config file ")
+        print_red(e)
         exit(1)
     except Exception as e:
         print_red(f"{type(e).__name__}: {e}")

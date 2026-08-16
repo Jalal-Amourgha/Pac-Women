@@ -2,7 +2,8 @@ import json
 
 import pygame
 
-from button import *
+from button import Button
+from custom_print import print_yellow
 from drawing import *
 from ghost import *
 from mazegenerator.mazegenerator import MazeGenerator
@@ -41,18 +42,18 @@ class Game:
         self.clock = pygame.time.Clock()
 
         self.running = True
-        self.highscore_filename = config["highscore_filename"]
-        self.levels = config["level"]
-        self.initial_lives = config["lives"]
-        self.p_p_p = config["points_per_pacgum"]
-        self.p_p_s_p = config["points_per_super_pacgum"]
-        self.p_p_g = config["points_per_ghost"]
-        self.level_time = config.get("level_max_time", 900000)
+        self.highscore_filename = config["player"]["highscore_filename"]
+        self.levels: list[dict[str, int]] = config["levels"]["maps"]
+        self.initial_lives = config["player"]["lives"]
+        self.p_p_p = config["player"]["points_per_pacgum"]
+        self.p_p_s_p = config["player"]["points_per_super_pacgum"]
+        self.p_p_g = config["player"]["points_per_ghost"]
+        self.level_time = config["player"]["level_max_time"]
 
         self._fonts: dict = {}
 
         self.state = State.MENU
-        self.level: int = 0
+        self.level_number: int = 0
         self.lives = self.initial_lives
         self.total_score: int = 0
         self.pending_score: int = 0
@@ -88,7 +89,14 @@ class Game:
         """
         big = self._font("./fonts/pacfont/pac-font.ttf", 20)
 
-        self.play_btn = Button("Start Game", 300, 200, 220, 60, big)
+        self.play_btn = Button(
+            "Start Game",
+            300,
+            200,
+            220,
+            60,
+            big,
+        )
         self.instructions_btn = Button("How To Play", 300, 280, 220, 60, big)
         self.leader_btn = Button("High Scorers", 300, 360, 220, 60, big)
         self.exit_btn = Button("Exit Game", 300, 440, 220, 60, big)
@@ -198,17 +206,17 @@ class Game:
         """(Re)builds the maze, player, ghosts, and pellets for
         self.level. Used both for starting a fresh run and for advancing
         to the next level within a run."""
-        width = self.levels[self.level]["width"]
-        height = self.levels[self.level]["height"]
+        width = self.levels[self.level_number]["width"]
+        height = self.levels[self.level_number]["height"]
         self.cols, self.rows = width, height
-        self.offset_x = (self.self.SCREEN_WIDTH - width * CELL_SIZE) // 2
+        self.offset_x = (self.SCREEN_WIDTH - width * CELL_SIZE) // 2
         self.style_42 = width >= 14 and height >= 14
 
         generator = MazeGenerator(size=(width, height))
         self.maze = generator.maze
 
         self._extract_coords()
-        self.drawing = Drawing(
+        self.drawing: Drawing = Drawing(
             self.offset_x, self.corner_coords, self.pattern_42_coords
         )
 
@@ -427,7 +435,7 @@ class Game:
         text_font = self._font("./fonts/pacfont/pac-font.ttf", 30)
         game_name = text_font.render(text, False, color)
         game_name_rect = game_name.get_rect(
-            center=(self.self.SCREEN_WIDTH // 2, 40)
+            center=(self.SCREEN_WIDTH // 2, 40)
         )
         self.screen.blit(game_name, game_name_rect)
 
@@ -438,19 +446,21 @@ class Game:
                 "jamourgh & aarid", False, color
             )
             creator_rect = creator_name.get_rect(
-                center=(self.self.SCREEN_WIDTH // 2, 80)
+                center=(self.SCREEN_WIDTH // 2, 80)
             )
             self.screen.blit(creator_name, creator_rect)
 
     def _draw_menu(self):
         self.screen.fill((0, 0, 0))  # Clear screen with black background
         self._draw_title(creator=True)
-        for btn in (
+        menu_buttons = [
             self.play_btn,
             self.instructions_btn,
             self.leader_btn,
             self.exit_btn,
-        ):
+        ]
+
+        for btn in menu_buttons:
             btn.draw(self.screen)
 
     def _draw_instructions(self):
@@ -546,6 +556,7 @@ class Game:
         self.back_btn.draw(self.screen)
 
     def _draw_game(self):
+        """"""
         self.screen.fill((0, 0, 0))
         self._draw_title(creator=True)
         self._draw_level_info()
@@ -590,6 +601,8 @@ class Game:
         )
 
     def _draw_pause_overlay(self):
+        """"""
+
         overlay = pygame.Surface(
             (self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SRCALPHA
         )
@@ -620,3 +633,4 @@ if __name__ == "__main__":
     # config: Parser = Parser('config.json').config
     config = read_config("game-config.toml")
     Game(config).run()
+    print_yellow("Thanks for playing!")
