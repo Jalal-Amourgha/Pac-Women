@@ -4,10 +4,10 @@ import pygame
 
 from button import Button
 from custom_print import print_yellow
-from drawing import *
+from drawing import Drawing
 from ghost import *
 from mazegenerator.mazegenerator import MazeGenerator
-from player import *
+from player import Player
 from superGum import *
 from text import *
 from utils import *
@@ -51,7 +51,7 @@ class Game:
 
         self._fonts: dict = {}
 
-        self.state = State.MENU
+        self.state: State = State.MENU
         self.level_number: int = 0
         self.lives = self.initial_lives
         self.total_score: int = 0
@@ -63,7 +63,7 @@ class Game:
         self.paused_since = None
 
         self.maze = None
-        self.drawing = None
+        self.drawing: Drawing | None = None
         self.player = None
         self.ghosts: list = []
         self.super_gums: list = []
@@ -77,6 +77,7 @@ class Game:
         self._build_ui()
 
     def _font(self, path, size):
+        """"""
         key = (path, size)
         if key not in self._fonts:
             self._fonts[key] = pygame.font.Font(path, size)
@@ -86,28 +87,89 @@ class Game:
         """
         Build the UI (mostly buttons)
         """
-        big = self._font("./fonts/pacfont/pac-font.ttf", 20)
+        big = self._font(path="./fonts/pacfont/pac-font.ttf", size=20)
 
-        self.play_btn = Button(
-            "Start Game",
-            300,
-            200,
-            220,
-            60,
-            big,
+        def centered_x(width=220) -> int:
+            """
+            Calculate the x position to center a button
+            """
+            return (self.SCREEN_WIDTH // 2) - (width // 2)
+
+        btn_width, btn_height = 220, 60
+        spacing: int = 20  # gap between buttons
+
+        # List of buttons to be looped
+        menu_items = [
+            ("play_btn", "Start Game"),
+            ("instructions_btn", "How To Play"),
+            ("leader_btn", "High Scorers"),
+            ("exit_btn", "Exit Game"),
+        ]
+
+        # Get the total height of all buttons
+        total_height = (
+            len(menu_items) * btn_height + (len(menu_items) - 1) * spacing
         )
-        self.instructions_btn = Button("How To Play", 300, 280, 220, 60, big)
-        self.leader_btn = Button("High Scorers", 300, 360, 220, 60, big)
-        self.exit_btn = Button("Exit Game", 300, 440, 220, 60, big)
 
-        self.back_btn = Button("Back", 300, 500, 220, 60, big)
+        # Calculate the start y position
+        start_y = (self.SCREEN_HEIGHT // 2) - (total_height // 2)
 
-        self.paus_btn = Button("Continue", 300, 250, 220, 60, big)
-        self.quit_to_menu_btn = Button("Quit to Menu", 300, 330, 220, 60, big)
+        # Create the start menu buttons
+        for i, (attr_name, text) in enumerate(menu_items):
+            y = start_y + i * (btn_height + spacing)
+            # Set The button object as attribute for self
+            setattr(
+                self,
+                attr_name,
+                Button(
+                    text=text,
+                    x=centered_x(btn_width),
+                    y=y,
+                    width=btn_width,
+                    height=btn_height,
+                    font=big,
+                ),
+            )
 
-        self.submit_btn = Button("Submit", 300, 330, 220, 60, big)
+        # The rest of the buttons to be used later
+        self.back_btn = Button(
+            text="Back",
+            x=centered_x(),
+            y=500,
+            width=220,
+            height=60,
+            font=big,
+        )
+        self.paus_btn = Button(
+            text="Continue",
+            x=centered_x(),
+            y=250,
+            width=220,
+            height=60,
+            font=big,
+        )
+        self.quit_to_menu_btn = Button(
+            text="Quit to Menu",
+            x=centered_x(),
+            y=330,
+            width=220,
+            height=60,
+            font=big,
+        )
+        self.submit_btn = Button(
+            text="Submit",
+            x=centered_x(),
+            y=330,
+            width=220,
+            height=60,
+            font=big,
+        )
         self.name_input = TextInput(
-            250, 250, 300, 50, self._font("./fonts/press/PressStart2P.ttf", 10)
+            x=centered_x(width=300),
+            y=250,
+            width=300,
+            height=50,
+            font=self._font(path="./fonts/press/PressStart2P.ttf", size=10),
         )
 
     def now(self):
@@ -148,7 +210,7 @@ class Game:
         if not self.style_42:
             return
 
-        coord_42 = {
+        coord_42: set = {
             (-3, 0),
             (-2, 0),
             (-1, 0),
@@ -215,7 +277,7 @@ class Game:
         self.maze = generator.maze
 
         self._extract_coords()
-        self.drawing: Drawing = Drawing(
+        self.drawing = Drawing(
             self.offset_x, self.corner_coords, self.pattern_42_coords
         )
 
