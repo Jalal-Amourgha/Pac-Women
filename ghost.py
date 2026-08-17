@@ -1,7 +1,16 @@
-import pygame
 import random
 from collections import deque
-from utils import cell_to_pixel_center, can_move, DIRECTIONS, GHOST_CHASE_CHANCE, GHOST_SPEED
+
+import pygame
+
+# TODO: REPLACE ALL THOSE CONFIG TO BE COMING FROM A CONFIG FILE, later.
+from utils import (
+    DIRECTIONS,
+    GHOST_CHASE_CHANCE,
+    GHOST_SPEED,
+    can_move,
+    cell_to_pixel_center,
+)
 
 
 class Ghost:
@@ -125,6 +134,7 @@ class Ghost:
         return False
 
     def update(self, maze, player_cord, now, flee=False):
+        """"""
         if not self.alive:
             return
 

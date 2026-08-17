@@ -4,12 +4,12 @@ import pygame
 
 from button import Button
 from custom_print import print_yellow
-from drawing import *
+from drawing import Drawing
 from ghost import *
 from mazegenerator.mazegenerator import MazeGenerator
-from player import *
+from player import Player
 from superGum import *
-from text import *
+from text import TextInput
 from utils import *
 from utils import State, read_config
 
@@ -24,6 +24,7 @@ class Game:
     def __init__(self, config: dict):
         """
         Initialize the game
+
         """
 
         # Extract window size
@@ -51,7 +52,7 @@ class Game:
 
         self._fonts: dict = {}
 
-        self.state = State.MENU
+        self.state: State = State.MENU
         self.level_number: int = 0
         self.lives = self.initial_lives
         self.total_score: int = 0
@@ -63,7 +64,7 @@ class Game:
         self.paused_since = None
 
         self.maze = None
-        self.drawing = None
+        self.drawing: Drawing | None = None
         self.player = None
         self.ghosts: list = []
         self.super_gums: list = []
@@ -74,9 +75,12 @@ class Game:
         self.gums_coords: set = set()
         self.total_gums: int = 0
 
+        # Map name => button object
+        self.buttons_map: dict[str, Button] = {}
         self._build_ui()
 
-    def _font(self, path, size):
+    def _get_font(self, path, size):
+        """Create the font image if not exists"""
         key = (path, size)
         if key not in self._fonts:
             self._fonts[key] = pygame.font.Font(path, size)
@@ -86,29 +90,65 @@ class Game:
         """
         Build the UI (mostly buttons)
         """
-        big = self._font("./fonts/pacfont/pac-font.ttf", 20)
+        big = self._get_font(path="./fonts/pacfont/pac-font.ttf", size=20)
 
-        self.play_btn = Button(
-            "Start Game",
-            300,
-            200,
-            220,
-            60,
-            big,
+        def centered_x(x_pixels=220) -> int:
+            """Center the button on the x axis of the screen"""
+            return (self.SCREEN_WIDTH // 2) - (x_pixels // 2)
+
+        btn_width, btn_height = 220, 60
+        spacing = 20  # gap between buttons
+
+        menu_items: list[tuple[str, str]] = [
+            ("play_btn", "Start Game"),
+            ("instructions_btn", "How To Play"),
+            ("leaderbord_btn", "High Scorers"),
+            ("exit_btn", "Exit Game"),
+        ]
+
+        # Calculate places based on their total sizes
+        total_height = (
+            len(menu_items) * btn_height + (len(menu_items) - 1) * spacing
         )
-        self.instructions_btn = Button("How To Play", 300, 280, 220, 60, big)
-        self.leader_btn = Button("High Scorers", 300, 360, 220, 60, big)
-        self.exit_btn = Button("Exit Game", 300, 440, 220, 60, big)
+        start_y = (self.SCREEN_HEIGHT // 2) - (total_height // 2)
 
-        self.back_btn = Button("Back", 300, 500, 220, 60, big)
+        # Create buttons
+        for i, (button_name, button_text) in enumerate(menu_items):
+            y = start_y + i * (btn_height + spacing)
+            self.buttons_map[button_name] = Button(
+                text=button_text,
+                x=centered_x(btn_width),
+                y=y,
+                width=btn_width,
+                height=btn_height,
+                font=big,
+            )
 
-        self.paus_btn = Button("Continue", 300, 250, 220, 60, big)
-        self.quit_to_menu_btn = Button("Quit to Menu", 300, 330, 220, 60, big)
-
-        self.submit_btn = Button("Submit", 300, 330, 220, 60, big)
-        self.name_input = TextInput(
-            250, 250, 300, 50, self._font("./fonts/press/PressStart2P.ttf", 10)
+        # TODO: SEE WHAT TO DO WITH THOSE LATER.
+        self.buttons_map["back_btn"] = Button("Back", 300, 500, 220, 60, big)
+        self.buttons_map["continue_btn"] = Button(
+            "Continue", 300, 250, 220, 60, big
         )
+        self.buttons_map["quit_to_menu_btn"] = Button(
+            text="Quit to Menu",
+            x=centered_x(btn_width),
+            y=330,
+            width=btn_width,
+            height=btn_height,
+            font=big,
+        )
+
+        self.buttons_map["submit_btn"] = Button(
+            "Submit", 300, 330, 220, 60, big
+        )
+        self.buttons_map["name_input"] = TextInput(
+            x=250,
+            y=250,
+            width=300,
+            height=50,
+            font=self._get_font("./fonts/press/PressStart2P.ttf", 10),
+        )
+        self.buttons_map["paus_btn"] = Button("Pause", 0, 0, 220, 60, big)
 
     def now(self):
         return pygame.time.get_ticks() - self.pause_offset
@@ -136,7 +176,11 @@ class Game:
         self.pending_score = self.total_score
         self.last_run_won = won
         self.name_input = TextInput(
-            250, 250, 300, 50, self._font("./fonts/press/PressStart2P.ttf", 18)
+            250,
+            250,
+            300,
+            50,
+            self._get_font("./fonts/press/PressStart2P.ttf", 18),
         )
         self.state = State.ENTER_NAME
 
@@ -148,7 +192,7 @@ class Game:
         if not self.style_42:
             return
 
-        coord_42 = {
+        coord_42: set = {
             (-3, 0),
             (-2, 0),
             (-1, 0),
@@ -215,7 +259,7 @@ class Game:
         self.maze = generator.maze
 
         self._extract_coords()
-        self.drawing: Drawing = Drawing(
+        self.drawing = Drawing(
             self.offset_x, self.corner_coords, self.pattern_42_coords
         )
 
@@ -246,16 +290,20 @@ class Game:
 
     def events(self):
         """Handle events"""
+
+        exit_btn = self.buttons_map["exit_btn"]
+        back_btn = self.buttons_map["back_btn"]
+
         for event in pygame.event.get():
             # Check for exit game
-            if event.type == pygame.QUIT or self.exit_btn.is_clicked(event):
+            if event.type == pygame.QUIT or exit_btn.is_clicked(event):
                 self.running = False
                 continue
             # User inside menu
             if self.state == State.MENU:
                 self._handle_menu_event(event)
             elif self.state in (State.INSTRUCTIONS, State.HIGHSCORES):
-                if self.back_btn.is_clicked(event):
+                if back_btn.is_clicked(event):
                     self.state = State.MENU
             elif self.state == State.PLAYING:
                 if (
@@ -269,29 +317,44 @@ class Game:
                 self._handle_enter_name_event(event)
 
     def _handle_menu_event(self, event):
-        if self.play_btn.is_clicked(event):
+        """"""
+
+        # Extract the buttons
+        play_btn = self.buttons_map["play_btn"]
+        instructions_btn = self.buttons_map["instructions_btn"]
+        leaderboard_btn = self.buttons_map["leaderbord_btn"]
+        exit_btn = self.buttons_map["exit_btn"]
+
+        if play_btn.is_clicked(event):
             self._start_new_run()
-        elif self.instructions_btn.is_clicked(event):
+        elif instructions_btn.is_clicked(event):
             self.state = State.INSTRUCTIONS
-        elif self.leader_btn.is_clicked(event):
+        elif leaderboard_btn.is_clicked(event):
             self.state = State.HIGHSCORES
 
-        if self.exit_btn.is_clicked(event):
+        if exit_btn.is_clicked(event):
             self.running = False
 
     def _handle_pause_event(self, event):
+        """Handle pause events"""
+        paus_btn = self.buttons_map["paus_btn"]
+        quit_to_menu_btn = self.buttons_map["quit_to_menu_btn"]
+
         if (
             event.type == pygame.KEYDOWN
             and event.key == pygame.K_ESCAPE
-            or self.paus_btn.is_clicked(event)
+            or paus_btn.is_clicked(event)
         ):
             self._resume()
-        elif self.quit_to_menu_btn.is_clicked(event):
+        elif quit_to_menu_btn.is_clicked(event):
             self.state = State.MENU
 
     def _handle_enter_name_event(self, event):
+        """"""
         submitted = self.name_input.handle_event(event)
-        if submitted or self.submit_btn.is_clicked(event):
+        submit_btn: Button = self.buttons_map["submit_btn"]
+
+        if submitted or submit_btn.is_clicked(event):
             self._save_highscore(
                 self.name_input.text.strip(), self.pending_score
             )
@@ -431,7 +494,7 @@ class Game:
     ):
         """Draws the game title"""
 
-        text_font = self._font("./fonts/pacfont/pac-font.ttf", 30)
+        text_font = self._get_font("./fonts/pacfont/pac-font.ttf", 30)
         game_name = text_font.render(text, False, color)
         game_name_rect = game_name.get_rect(
             center=(self.SCREEN_WIDTH // 2, 40)
@@ -439,7 +502,7 @@ class Game:
         self.screen.blit(game_name, game_name_rect)
 
         if creator:
-            creator_font = self._font("./fonts/press/PressStart2P.ttf", 10)
+            creator_font = self._get_font("./fonts/press/PressStart2P.ttf", 10)
             creator_font.set_italic(True)
             creator_name = creator_font.render(
                 "jamourgh & aarid", False, color
@@ -453,10 +516,10 @@ class Game:
         self.screen.fill((0, 0, 0))  # Clear screen with black background
         self._draw_title(creator=True)
         menu_buttons = [
-            self.play_btn,
-            self.instructions_btn,
-            self.leader_btn,
-            self.exit_btn,
+            self.buttons_map["play_btn"],
+            self.buttons_map["instructions_btn"],
+            self.buttons_map["leaderbord_btn"],
+            self.buttons_map["exit_btn"],
         ]
 
         for btn in menu_buttons:
@@ -475,20 +538,22 @@ class Game:
             "Clear every pellet to finish the level.",
             "Press ESC to pause at any time.",
         ]
-        text_font = self._font("./fonts/press/PressStart2P.ttf", 14)
+        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 14)
         for i, line in enumerate(lines):
             surf = text_font.render(line, False, "white")
             rect = surf.get_rect(center=(self.SCREEN_WIDTH // 2, 150 + i * 40))
             self.screen.blit(surf, rect)
 
-        self.back_btn.draw(self.screen)
+        back_btn = self.buttons_map["back_btn"]
+        back_btn.draw(self.screen)
 
     def _draw_highscores(self):
+        """"""
         self.screen.fill((0, 0, 0))
         self._draw_title("Top Players")
 
         players = sorted(self._load_highscores(), key=lambda p: -p["score"])
-        text_font = self._font("./fonts/press/PressStart2P.ttf", 14)
+        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 14)
 
         if not players:
             surf = text_font.render(
@@ -522,7 +587,8 @@ class Game:
                     score_surf.get_rect(topleft=(500, 130 + idx * 30)),
                 )
 
-        self.back_btn.draw(self.screen)
+        back_btn = self.buttons_map["back_btn"]
+        back_btn.draw(self.screen)
 
     def _draw_enter_name(self):
         self.screen.fill((0, 0, 0))
@@ -531,7 +597,7 @@ class Game:
         else:
             self._draw_title("Game Over", "red")
 
-        text_font = self._font("./fonts/press/PressStart2P.ttf", 16)
+        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 16)
         score_surf = text_font.render(
             f"Final score: {self.pending_score}", False, "white"
         )
@@ -573,7 +639,7 @@ class Game:
         self.player.draw(self.screen)
 
     def _draw_level_info(self):
-        text_font = self._font("./fonts/press/PressStart2P.ttf", 12)
+        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 12)
         score_surf = text_font.render(
             f"Score: {self.player.score}", False, "white"
         )
@@ -602,20 +668,23 @@ class Game:
     def _draw_pause_overlay(self):
         """"""
 
+        quit_to_menu_btn = self.buttons_map["quit_to_menu_btn"]
+        # TODO: ADD PAUSE BUTTON
+
         overlay = pygame.Surface(
             (self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SRCALPHA
         )
         overlay.fill((0, 0, 0, 180))
         self.screen.blit(overlay, (0, 0))
 
-        text_font = self._font("./fonts/pacfont/pac-font.ttf", 40)
+        text_font = self._get_font("./fonts/pacfont/pac-font.ttf", 40)
         text = text_font.render("Paused", False, "yellow")
         self.screen.blit(
             text, text.get_rect(center=(self.SCREEN_WIDTH // 2, 150))
         )
 
-        self.paus_btn.draw(self.screen)
-        self.quit_to_menu_btn.draw(self.screen)
+        # self.paus_btn.draw(self.screen)
+        quit_to_menu_btn.draw(self.screen)
 
     def run(self):
         while self.running:
@@ -629,7 +698,7 @@ class Game:
 
 
 if __name__ == "__main__":
-    # config: Parser = Parser('config.json').config
     config = read_config("game-config.toml")
-    Game(config).run()
+    pacman = Game(config)
+    pacman.run()
     print_yellow("Thanks for playing!")
