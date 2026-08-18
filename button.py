@@ -29,7 +29,7 @@ class Button:
         """"""
         mouse_pos = pygame.mouse.get_pos()
 
-        # Check if mouse is hover over the button
+        # Set the hover effect
         if self.rect.collidepoint(mouse_pos):
             text_color, bg_color = self.bg_color, self.text_color
         else:
@@ -46,14 +46,14 @@ class Button:
     def is_clicked(self, event):
         """
         Check for a mouse clicked with the left mouse button
-        and check if the mouse is inside the button rect
-
 
         Returns:
-            True if the mouse is inside the button rect
+            True if the button is clicked
         """
-
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if self.rect.collidepoint(event.pos):
-                return True
+        if (
+            event.type == pygame.MOUSEBUTTONDOWN
+            and event.button == 1
+            and self.rect.collidepoint(event.pos)
+        ):
+            return True
         return False

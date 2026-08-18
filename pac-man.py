@@ -1,4 +1,3 @@
-# TODO: CONVERT THE CONFIG TO JSON AGAIN
 import json
 import sys
 
@@ -12,8 +11,7 @@ from mazegenerator.mazegenerator import MazeGenerator
 from player import Player
 from superGum import *
 from text import TextInput
-from utils import *
-from utils import State, read_config
+from utils import CELL_SIZE, State, read_config
 from validation import Config_Validator
 
 # NOTE: DO NOT IMPORT BLINDLY WITH '*', USE SPECIFIC MODULES
@@ -89,15 +87,19 @@ class Game:
             self._fonts[key] = pygame.font.Font(path, size)
         return self._fonts[key]
 
+    def _centered_x(self, width=220) -> int:
+        """Center the button on the x axis of the screen"""
+        return (self.SCREEN_WIDTH // 2) - (width // 2)
+
+    def _centered_y(self, height=60) -> int:
+        """Center the button on the y axis of the screen"""
+        return (self.SCREEN_HEIGHT // 2) - (height // 2)
+
     def _build_ui(self):
         """
         Build the UI (mostly buttons)
         """
         big = self._get_font(path="./fonts/pacfont/pac-font.ttf", size=20)
-
-        def centered_x(x_pixels=220) -> int:
-            """Center the button on the x axis of the screen"""
-            return (self.SCREEN_WIDTH // 2) - (x_pixels // 2)
 
         btn_width, btn_height = 220, 60
         spacing = 20  # gap between buttons
@@ -106,7 +108,7 @@ class Game:
             ("play_btn", "Start Game"),
             ("instructions_btn", "How To Play"),
             ("leaderbord_btn", "High Scorers"),
-            ("exit_btn", "Exit Game"),
+            # ("exit_btn", "Exit Game"),
         ]
 
         # Calculate places based on their total sizes
@@ -120,21 +122,41 @@ class Game:
             y = start_y + i * (btn_height + spacing)
             self.buttons_map[button_name] = Button(
                 text=button_text,
-                x=centered_x(btn_width),
+                x=self._centered_x(btn_width),
                 y=y,
                 width=btn_width,
                 height=btn_height,
                 font=big,
             )
 
-        # TODO: SEE WHAT TO DO WITH THOSE LATER.
-        self.buttons_map["back_btn"] = Button("Back", 300, 500, 220, 60, big)
+        self.buttons_map["exit_btn"] = Button(
+            text="Exit Game",
+            x=self._centered_x(btn_width),
+            y=self.SCREEN_HEIGHT - 150,
+            width=btn_width,
+            height=btn_height,
+            font=big,
+        )
+
+        self.buttons_map["back_btn"] = Button(
+            "Back",
+            self._centered_x(width=btn_width),
+            self.SCREEN_HEIGHT - 200,
+            btn_width,
+            btn_height,
+            big,
+        )
         self.buttons_map["continue_btn"] = Button(
-            "Continue", 300, 250, 220, 60, big
+            "Continue",
+            self._centered_x(width=btn_width),
+            250,
+            btn_width,
+            btn_height,
+            big,
         )
         self.buttons_map["quit_to_menu_btn"] = Button(
             text="Quit to Menu",
-            x=centered_x(btn_width),
+            x=self._centered_x(btn_width),
             y=330,
             width=btn_width,
             height=btn_height,
@@ -142,16 +164,22 @@ class Game:
         )
 
         self.buttons_map["submit_btn"] = Button(
-            "Submit", 300, 330, 220, 60, big
+            text="Submit",
+            x=self._centered_x(width=220),
+            y=self._centered_y(height=60),
+            width=220,
+            height=60,
+            font=big,
         )
         # TODO: CHECK THIS LATER
         self.buttons_map["name_input"] = TextInput(
-            x=250,
-            y=250,
+            x=self._centered_x(width=300),
+            y=self._centered_y(height=50) - 20,
             width=300,
             height=50,
             font=self._get_font("./fonts/press/PressStart2P.ttf", 10),
         )
+        # TODO: CHECK THIS BUTTON LATER
         self.buttons_map["paus_btn"] = Button("Pause", 0, 0, 220, 60, big)
 
     def now(self):
@@ -180,8 +208,8 @@ class Game:
         self.pending_score = self.total_score
         self.last_run_won = won
         self.name_input = TextInput(
-            250,
-            250,
+            self._centered_x(width=300),
+            self.SCREEN_HEIGHT // 3,
             300,
             50,
             self._get_font("./fonts/press/PressStart2P.ttf", 18),
@@ -596,11 +624,13 @@ class Game:
         back_btn.draw(self.screen)
 
     def _draw_enter_name(self):
-        """"""
+        """Draws the enter name screen after a game is over"""
 
         # Extract buttons
         back_btn = self.buttons_map["back_btn"]
         submit_btn = self.buttons_map["submit_btn"]
+        # For score and prompt
+        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 16)
 
         self.screen.fill((0, 0, 0))
         if self.last_run_won:
@@ -608,24 +638,28 @@ class Game:
         else:
             self._draw_title("Game Over", "red")
 
-        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 16)
         score_surf = text_font.render(
             f"Final score: {self.pending_score}", False, "white"
         )
         self.screen.blit(
             score_surf,
-            score_surf.get_rect(center=(self.SCREEN_WIDTH // 2, 200)),
+            score_surf.get_rect(
+                center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 6)
+            ),
         )
 
         prompt_surf = text_font.render("Enter your name:", False, "white")
         self.screen.blit(
             prompt_surf,
-            prompt_surf.get_rect(center=(self.SCREEN_WIDTH // 2, 230)),
+            prompt_surf.get_rect(
+                center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 4)
+            ),
         )
 
-        back_btn.rect = pygame.Rect(
-            back_btn.x, 400, back_btn.width, back_btn.height
-        )
+        # # TODO: CHECK THIS LATER, ??? WHY?? DIDN'T YOU ALREADY HAVE BACK BTN
+        # back_btn.rect = pygame.Rect(
+        #     back_btn.x, 400, back_btn.width, back_btn.height
+        # )
 
         self.name_input.draw(self.screen)
         submit_btn.draw(self.screen)
@@ -703,7 +737,7 @@ class Game:
             self.update()
             self.draw()
             # Limit to 60 frames per second
-            self.clock.tick(60)
+            self.clock.tick(45)
 
         pygame.quit()
 
@@ -713,7 +747,7 @@ def main() -> None:
 
     if len(sys.argv) < 2:
         print_yellow("Warning: Please provide a config file")
-        exit(1)
+        sys.exit(1)
 
     # Read config file, validate it, convert it back to dict
     config_data = read_config()

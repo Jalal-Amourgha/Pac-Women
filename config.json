@@ -13,11 +13,8 @@
     "highscore_filename": "highscores.json",
     "level_max_time": 900
   },
-  "levels": {
-    "maps": [
-      { "width": 23, "height": 14 },
-      { "width": 11, "height": 11 }
-    ]
-  }
+  "maps": [
+    { "width": 23, "height": 14 },
+    { "width": 11, "height": 11 }
+  ]
 }
-
