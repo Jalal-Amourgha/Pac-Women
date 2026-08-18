@@ -1,4 +1,6 @@
+# TODO: CONVERT THE CONFIG TO JSON AGAIN
 import json
+import sys
 
 import pygame
 
@@ -141,6 +143,7 @@ class Game:
         self.buttons_map["submit_btn"] = Button(
             "Submit", 300, 330, 220, 60, big
         )
+        # TODO: CHECK THIS LATER
         self.buttons_map["name_input"] = TextInput(
             x=250,
             y=250,
@@ -494,7 +497,8 @@ class Game:
     ):
         """Draws the game title"""
 
-        text_font = self._get_font("./fonts/pacfont/pac-font.ttf", 30)
+        # text_font = self._get_font("./fonts/pacfont/pac-font.ttf", 30)
+        text_font = self._get_font("./fonts/arcade/ARCADE_I.TTF", 30)
         game_name = text_font.render(text, False, color)
         game_name_rect = game_name.get_rect(
             center=(self.SCREEN_WIDTH // 2, 40)
@@ -591,6 +595,12 @@ class Game:
         back_btn.draw(self.screen)
 
     def _draw_enter_name(self):
+        """"""
+
+        # Extract buttons
+        back_btn = self.buttons_map["back_btn"]
+        submit_btn = self.buttons_map["submit_btn"]
+
         self.screen.fill((0, 0, 0))
         if self.last_run_won:
             self._draw_title("You Win!", "green")
@@ -612,13 +622,13 @@ class Game:
             prompt_surf.get_rect(center=(self.SCREEN_WIDTH // 2, 230)),
         )
 
-        self.back_btn.rect = pygame.Rect(
-            self.back_btn.x, 400, self.back_btn.width, self.back_btn.height
+        back_btn.rect = pygame.Rect(
+            back_btn.x, 400, back_btn.width, back_btn.height
         )
 
         self.name_input.draw(self.screen)
-        self.submit_btn.draw(self.screen)
-        self.back_btn.draw(self.screen)
+        submit_btn.draw(self.screen)
+        back_btn.draw(self.screen)
 
     def _draw_game(self):
         """"""
@@ -698,7 +708,10 @@ class Game:
 
 
 if __name__ == "__main__":
-    config = read_config("game-config.toml")
+    if len(sys.argv) < 2:
+        print_yellow("Warning: Please provide a config file")
+        exit(1)
+    config = read_config()
     pacman = Game(config)
     pacman.run()
     print_yellow("Thanks for playing!")

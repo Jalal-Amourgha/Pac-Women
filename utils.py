@@ -1,7 +1,6 @@
+import json
+import sys
 from enum import Enum, auto
-from sys import exit
-
-import toml
 
 from custom_print import print_red
 
@@ -76,7 +75,7 @@ def cell_to_pixel_center(x, y, offset_x, offset_y=OFFSET_Y):
     return px, py
 
 
-def read_config(path: str) -> dict:
+def read_config() -> dict:
     """Read game config file
 
     Args:
@@ -86,18 +85,21 @@ def read_config(path: str) -> dict:
         dict: config
     """
 
+    file_name: str = sys.argv[1]
+
     try:
-        with open(path) as f:
-            config = toml.load(f)
+        with open(file_name, "r") as f:
+            config: dict = json.load(f)
     except FileNotFoundError:
-        print_red("Error: Config file not found")
-        exit(1)
-    except toml.TomlDecodeError as e:
-        print_red("Error: Invalid config file ")
+        print_red(f"Config file {file_name} not found")
+        sys.exit(1)
+    except json.JSONDecodeError as e:
+        print_red(f"Invalid config file {file_name}")
         print_red(e)
-        exit(1)
+        sys.exit(1)
     except Exception as e:
-        print_red(f"{type(e).__name__}: {e}")
-        exit(1)
+        print_red(f"Error reading config file {file_name}")
+        print_red(e)
+        sys.exit(1)
 
     return config
