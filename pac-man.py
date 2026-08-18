@@ -14,6 +14,7 @@ from superGum import *
 from text import TextInput
 from utils import *
 from utils import State, read_config
+from validation import Config_Validator
 
 # NOTE: DO NOT IMPORT BLINDLY WITH '*', USE SPECIFIC MODULES
 
@@ -45,7 +46,7 @@ class Game:
 
         self.running = True
         self.highscore_filename = config["player"]["highscore_filename"]
-        self.levels: list[dict[str, int]] = config["levels"]["maps"]
+        self.levels: list[dict[str, int]] = config["maps"]
         self.initial_lives = config["player"]["lives"]
         self.p_p_p = config["player"]["points_per_pacgum"]
         self.p_p_s_p = config["player"]["points_per_super_pacgum"]
@@ -707,11 +708,24 @@ class Game:
         pygame.quit()
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Main function"""
+
     if len(sys.argv) < 2:
         print_yellow("Warning: Please provide a config file")
         exit(1)
-    config = read_config()
+
+    # Read config file, validate it, convert it back to dict
+    config_data = read_config()
+    validated_config: Config_Validator = Config_Validator.model_validate(
+        config_data
+    )
+    config: dict = validated_config.model_dump()
+
     pacman = Game(config)
     pacman.run()
     print_yellow("Thanks for playing!")
+
+
+if __name__ == "__main__":
+    main()
