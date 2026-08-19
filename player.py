@@ -48,27 +48,28 @@ class Player:
         moved = False
         new_direction = self.direction
 
-        if (keys[pygame.K_UP] or keys[pygame.K_w]) and can_move(
-            maze, self.x, self.y, "UP"
-        ):
+        # Extract direction keys
+        UP = keys[pygame.K_UP] or keys[pygame.K_w] or keys[pygame.K_k]
+        DOWN = keys[pygame.K_DOWN] or keys[pygame.K_s] or keys[pygame.K_j]
+        LEFT = keys[pygame.K_LEFT] or keys[pygame.K_a] or keys[pygame.K_h]
+        RIGHT = keys[pygame.K_RIGHT] or keys[pygame.K_d] or keys[pygame.K_l]
+
+        if UP and can_move(maze, self.x, self.y, "UP"):
             self.y -= 1
             new_direction = "UP"
             moved = True
-        elif (keys[pygame.K_DOWN] or keys[pygame.K_s]) and can_move(
-            maze, self.x, self.y, "DOWN"
-        ):
+
+        elif DOWN and can_move(maze, self.x, self.y, "DOWN"):
             self.y += 1
             new_direction = "DOWN"
             moved = True
-        elif (keys[pygame.K_LEFT] or keys[pygame.K_a]) and can_move(
-            maze, self.x, self.y, "LEFT"
-        ):
+
+        elif LEFT and can_move(maze, self.x, self.y, "LEFT"):
             self.x -= 1
             new_direction = "LEFT"
             moved = True
-        elif (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and can_move(
-            maze, self.x, self.y, "RIGHT"
-        ):
+
+        elif RIGHT and can_move(maze, self.x, self.y, "RIGHT"):
             self.x += 1
             new_direction = "RIGHT"
             moved = True
