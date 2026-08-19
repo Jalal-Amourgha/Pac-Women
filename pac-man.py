@@ -1,3 +1,4 @@
+# TODO: LATER MAKE THE FONT DYNAMIC BASED ON SCREEN SIZE
 import json
 import sys
 
@@ -102,7 +103,7 @@ class Game:
         big = self._get_font(path="./fonts/pacfont/pac-font.ttf", size=20)
 
         btn_width, btn_height = 220, 60
-        spacing = 20  # gap between buttons
+        gap: int = 20  # gap between buttons
 
         menu_items: list[tuple[str, str]] = [
             ("play_btn", "Start Game"),
@@ -113,13 +114,13 @@ class Game:
 
         # Calculate places based on their total sizes
         total_height = (
-            len(menu_items) * btn_height + (len(menu_items) - 1) * spacing
+            len(menu_items) * btn_height + (len(menu_items) - 1) * gap
         )
         start_y = (self.SCREEN_HEIGHT // 2) - (total_height // 2)
 
         # Create buttons
         for i, (button_name, button_text) in enumerate(menu_items):
-            y = start_y + i * (btn_height + spacing)
+            y = start_y + i * (btn_height + gap)
             self.buttons_map[button_name] = Button(
                 text=button_text,
                 x=self._centered_x(btn_width),
@@ -546,6 +547,7 @@ class Game:
             self.screen.blit(creator_name, creator_rect)
 
     def _draw_menu(self):
+        """Draws the main menu"""
         self.screen.fill((0, 0, 0))  # Clear screen with black background
         self._draw_title(creator=True)
         menu_buttons = [
@@ -585,14 +587,21 @@ class Game:
         self.screen.fill((0, 0, 0))
         self._draw_title("Top Players")
 
-        players = sorted(self._load_highscores(), key=lambda p: -p["score"])
+        players: list = sorted(
+            self._load_highscores(), key=lambda p: -p["score"]
+        )
         text_font = self._get_font("./fonts/press/PressStart2P.ttf", 14)
+        record_height: int = 150
+        record_width: int = 200
+        gap: int = 30
 
         if not players:
             surf = text_font.render(
                 "No scores yet - be the first!", False, "white"
             )
-            rect = surf.get_rect(center=(self.SCREEN_WIDTH // 2, 150))
+            rect = surf.get_rect(
+                center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 4)
+            )
             self.screen.blit(surf, rect)
         else:
             for idx, player in enumerate(players[:10]):
@@ -605,20 +614,32 @@ class Game:
                     color = "#CD7F32"
                 # else:
                 #     name_surf = text_font.render(str(player['username']), False, 'white')
-                name_surf = text_font.render(
-                    f"{idx + 1}- {player['username']}", False, color
-                )
-                score_surf = text_font.render(
-                    str(player["score"]), False, color
+
+                # name_surf = text_font.render(
+                #     f"{idx + 1}- {player['username']}", False, color
+                # )
+                # score_surf = text_font.render(
+                #     str(player["score"]), False, color
+                # )
+                #
+                player_record_surf = text_font.render(
+                    f"{idx + 1}- {player['username']}: {player['score']}",
+                    False,
+                    color,
                 )
                 self.screen.blit(
-                    name_surf,
-                    name_surf.get_rect(topleft=(200, 130 + idx * 30)),
+                    player_record_surf,
+                    player_record_surf.get_rect(
+                        topleft=(
+                            self._centered_x(width=record_width),
+                            self.SCREEN_HEIGHT // 5 + gap * idx,
+                        )
+                    ),
                 )
-                self.screen.blit(
-                    score_surf,
-                    score_surf.get_rect(topleft=(500, 130 + idx * 30)),
-                )
+                # self.screen.blit(
+                #     score_surf,
+                #     score_surf.get_rect(topleft=(500, 130 + idx * 30)),
+                # )
 
         back_btn = self.buttons_map["back_btn"]
         back_btn.draw(self.screen)
