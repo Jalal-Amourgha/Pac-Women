@@ -94,7 +94,7 @@ def read_config() -> dict:
         print_red(f"Config file {file_name} not found")
         sys.exit(1)
     except json.JSONDecodeError as e:
-        print_red(f"Invalid config file {file_name}")
+        print_red(f"Invalid config file: {file_name}")
         print_red(e)
         sys.exit(1)
     except Exception as e:

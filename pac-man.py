@@ -1,19 +1,23 @@
 # TODO: LATER MAKE THE FONT DYNAMIC BASED ON SCREEN SIZE
 import json
-import sys
 
 import pygame
 
 from button import Button
-from custom_print import print_yellow
+from custom_print import print_green
 from drawing import Drawing
 from ghost import *
 from mazegenerator.mazegenerator import MazeGenerator
 from player import Player
 from superGum import *
 from text import TextInput
-from utils import CELL_SIZE, State, read_config
-from validation import Config_Validator
+from utils import (
+    CELL_SIZE,
+    EDIBLE_BLINK_AT_MS,
+    EDIBLE_DURATION_MS,
+    State,
+)
+from validation import handle_config_validation
 
 # NOTE: DO NOT IMPORT BLINDLY WITH '*', USE SPECIFIC MODULES
 
@@ -583,7 +587,7 @@ class Game:
         back_btn.draw(self.screen)
 
     def _draw_highscores(self):
-        """"""
+        """Draws the highscores screen"""
         self.screen.fill((0, 0, 0))
         self._draw_title("Top Players")
 
@@ -591,9 +595,8 @@ class Game:
             self._load_highscores(), key=lambda p: -p["score"]
         )
         text_font = self._get_font("./fonts/press/PressStart2P.ttf", 14)
-        record_height: int = 150
+        record_height: int = 35
         record_width: int = 200
-        gap: int = 30
 
         if not players:
             surf = text_font.render(
@@ -631,8 +634,8 @@ class Game:
                     player_record_surf,
                     player_record_surf.get_rect(
                         topleft=(
-                            self._centered_x(width=record_width),
-                            self.SCREEN_HEIGHT // 5 + gap * idx,
+                            self._centered_x(width=record_width) - 40,
+                            self.SCREEN_HEIGHT // 6 + (record_height * idx),
                         )
                     ),
                 )
@@ -766,20 +769,10 @@ class Game:
 def main() -> None:
     """Main function"""
 
-    if len(sys.argv) < 2:
-        print_yellow("Warning: Please provide a config file")
-        sys.exit(1)
-
-    # Read config file, validate it, convert it back to dict
-    config_data = read_config()
-    validated_config: Config_Validator = Config_Validator.model_validate(
-        config_data
-    )
-    config: dict = validated_config.model_dump()
-
+    config: dict = handle_config_validation()
     pacman = Game(config)
     pacman.run()
-    print_yellow("Thanks for playing!")
+    print_green("Thanks for playing!")
 
 
 if __name__ == "__main__":
