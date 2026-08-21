@@ -1,10 +1,11 @@
 # TODO: LATER MAKE THE FONT DYNAMIC BASED ON SCREEN SIZE
 import json
 import math
+
 import pygame
 
 from button import Button
-from custom_print import print_green
+from custom_print import print_green, print_red
 from drawing import Drawing
 from ghost import *
 from mazegenerator.mazegenerator import MazeGenerator
@@ -115,7 +116,7 @@ class Game:
         """
         big = self._get_font(path="./fonts/pacfont/pac-font.ttf", size=20)
 
-        btn_width, btn_height = 220, 60
+        btn_width, btn_height = 240, 80
         gap: int = 20  # gap between buttons
 
         menu_items: list[tuple[str, str]] = [
@@ -171,7 +172,7 @@ class Game:
         self.buttons_map["quit_to_menu_btn"] = Button(
             text="Quit to Menu",
             x=self._centered_x(btn_width),
-            y=330,
+            y=self.SCREEN_HEIGHT - 200,
             width=btn_width,
             height=btn_height,
             font=big,
@@ -179,8 +180,8 @@ class Game:
 
         self.buttons_map["submit_btn"] = Button(
             text="Submit",
-            x=self._centered_x(width=220),
-            y=self._centered_y(height=60),
+            x=self._centered_x(width=btn_width),
+            y=self._centered_y(height=btn_height),
             width=220,
             height=60,
             font=big,
@@ -321,14 +322,20 @@ class Game:
 
         self.level_start_time = self.now()
 
-    def _load_highscores(self):
+    def _load_highscores(self) -> list:
+        """Load highscores"""
         try:
             with open(self.highscore_filename) as f:
                 return json.load(f).get("players", [])
-        except (FileNotFoundError, json.JSONDecodeError):
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print_red({e})
+            return []
+        except Exception as e:
+            print_red({e})
             return []
 
-    def _save_highscore(self, username, score):
+    def _save_highscore(self, username: str, score: int):
+        """Saves the highscore"""
         players = self._load_highscores()
         players.append({"username": username or "Player", "score": score})
         with open(self.highscore_filename, "w") as f:
@@ -350,49 +357,46 @@ class Game:
                 self.state = State.MENU
                 continue
 
-             # C H E A T E - M O D E
-            if (event.type == pygame.KEYDOWN):
+            # C H E A T E - M O D E
+            if event.type == pygame.KEYDOWN:
                 # Check if Ctrl is held
-                if (pygame.key.get_mods() & pygame.KMOD_CTRL):
-                    if (event.key == pygame.K_1):
+                if pygame.key.get_mods() & pygame.KMOD_CTRL:
+                    if event.key == pygame.K_1:
                         # P L A Y E R - I N V I S I B L E
                         print("Ctrl + 1 was pressed!")
                         self.invisible = not self.invisible
 
-                    if (event.key == pygame.K_2):
+                    if event.key == pygame.K_2:
                         # G H O S T - F R E E Z E D
                         print("Ctrl + 2 was pressed!")
                         for ghost in self.ghosts:
                             ghost.freezed = not ghost.freezed
 
-                    if (event.key == pygame.K_3):
+                    if event.key == pygame.K_3:
                         # P L A Y E R - I N C R E A S E - P L A Y E R - S P E E D
                         print("Ctrl + 3 was pressed!")
-                        self.player.speed = max(self.player.speed-10, 10)
+                        self.player.speed = max(self.player.speed - 10, 10)
 
-                    if (event.key == pygame.K_4):
+                    if event.key == pygame.K_4:
                         # P L A Y E R - S K I P - L E V E L
                         print("Ctrl + 4 was pressed!")
-                        self.player.gums_eated += (self.rows * self.cols)
+                        self.player.gums_eated += self.rows * self.cols
                         self.check_win()
 
-                    if (event.key == pygame.K_5):
+                    if event.key == pygame.K_5:
                         # P L A Y E R - I N C R E A S E - S C O R E by 1000
                         print("Ctrl + 5 was pressed!")
                         self.player.score += 1000
 
-                    if (event.key == pygame.K_6):
+                    if event.key == pygame.K_6:
                         # I M O R T A L E
                         print("Ctrl + 6 was pressed!")
                         self.lives = math.inf
 
-                    if (event.key == pygame.K_7):
+                    if event.key == pygame.K_7:
                         # S T O P - T I M E
                         print("Ctrl + 7 was pressed!")
                         self.stop_time = not self.stop_time
-
-
-
 
             # User inside menu
             if self.state == State.MENU:
@@ -528,7 +532,7 @@ class Game:
             else:
                 # pass
                 # IF YOU WANT TO BECOME INVISIBLE PRESS CRTL + 1
-                if (self.invisible):
+                if self.invisible:
                     break
                 self.lives -= 1
                 if self.lives <= 0:
@@ -570,9 +574,9 @@ class Game:
             self._new_level()
 
     def _update_timer(self):
-        if (self.stop_time):
+        if self.stop_time:
             return
-        
+
         self.time_left = self.level_time - (self.now() - self.level_start_time)
         if self.time_left <= 0:
             self.total_score += self.player.score
@@ -723,8 +727,9 @@ class Game:
         """Draws the enter name screen after a game is over"""
 
         # Extract buttons
-        back_btn = self.buttons_map["back_btn"]
         submit_btn = self.buttons_map["submit_btn"]
+        quit_to_menu_btn = self.buttons_map["quit_to_menu_btn"]
+
         # For score and prompt
         text_font = self._get_font("./fonts/press/PressStart2P.ttf", 16)
 
@@ -754,8 +759,7 @@ class Game:
 
         self.name_input.draw(self.screen)
         submit_btn.draw(self.screen)
-        self.buttons_map["quit_to_menu_btn"].draw(self.screen)  # Fixed
-
+        quit_to_menu_btn.draw(self.screen)
 
     def _draw_game(self):
         """Draws the game screen"""
