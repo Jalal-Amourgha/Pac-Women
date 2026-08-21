@@ -27,10 +27,12 @@ class Game:
     Main game class
     """
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Initialize the game
 
+        Args:
+            config (dict): Game configuration
         """
 
         # Extract window size
@@ -86,8 +88,11 @@ class Game:
         self.stop_time = False
 
         # Map name => button object
-        self.buttons_map: dict[str, Button] = {}
+        self.buttons_map: dict[str, Button | TextInput] = {}
         self._build_ui()
+        self.very_start_game = pygame.mixer.Sound(
+            "./assets/sounds/pac-man-very-start-of-game.mp3"
+        )
 
     def _get_font(self, path, size):
         """Create the font image if not exists"""
@@ -180,7 +185,7 @@ class Game:
             height=60,
             font=big,
         )
-        # TODO: CHECK THIS LATER
+
         self.buttons_map["name_input"] = TextInput(
             x=self._centered_x(width=300),
             y=self._centered_y(height=50) - 20,
@@ -407,13 +412,18 @@ class Game:
                 self._handle_enter_name_event(event)
 
     def _handle_menu_event(self, event):
-        """"""
+        """Handle menu events
+
+        Args:
+            event: Pygame event
+
+        """
 
         # Extract the buttons
-        play_btn = self.buttons_map["play_btn"]
-        instructions_btn = self.buttons_map["instructions_btn"]
-        leaderboard_btn = self.buttons_map["leaderbord_btn"]
-        exit_btn = self.buttons_map["exit_btn"]
+        play_btn: Button = self.buttons_map["play_btn"]
+        instructions_btn: Button = self.buttons_map["instructions_btn"]
+        leaderboard_btn: Button = self.buttons_map["leaderbord_btn"]
+        exit_btn: Button = self.buttons_map["exit_btn"]
 
         if play_btn.is_clicked(event):
             self._start_new_run()
@@ -480,7 +490,7 @@ class Game:
             self._update_timer()
 
     def _update_edible_state(self):
-        """"""
+        """Update edible state"""
         if not self.player.edible:
             return
 
@@ -500,6 +510,7 @@ class Game:
                 ghost.ghost = ghost.forms[blink_form]
 
     def check_collisions(self):
+        """Check for collisions between player and ghosts"""
         assert self.player is not None
         for ghost in self.ghosts:
             if not ghost.alive or (ghost.x, ghost.y) != (
@@ -545,6 +556,7 @@ class Game:
                 break
 
     def check_win(self):
+        """Check if the player has won the game"""
         if self.player.gums_eated < self.total_gums:
             return
 
@@ -567,6 +579,7 @@ class Game:
             self._end_run(False)
 
     def draw(self):
+        """Draw the game based on the current state"""
         if self.state == State.MENU:
             self._draw_menu()
         elif self.state == State.INSTRUCTIONS:
@@ -745,7 +758,7 @@ class Game:
 
 
     def _draw_game(self):
-        """"""
+        """Draws the game screen"""
         self.screen.fill((0, 0, 0))
         self._draw_title(creator=True)
         self._draw_level_info()
@@ -790,7 +803,7 @@ class Game:
         )
 
     def _draw_pause_overlay(self):
-        """"""
+        """Draws the pause overlay"""
 
         quit_to_menu_btn = self.buttons_map["quit_to_menu_btn"]
         # TODO: ADD PAUSE BUTTON
@@ -811,6 +824,8 @@ class Game:
         quit_to_menu_btn.draw(self.screen)
 
     def run(self):
+        """Runs the game"""
+        self.very_start_game.play()
         while self.running:
             self.events()
             self.update()
