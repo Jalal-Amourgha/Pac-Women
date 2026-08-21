@@ -74,7 +74,9 @@ class Game:
 
         self.maze = None
         self.drawing: Drawing | None = None
-        self.player = None
+        self.player: Player | None = None
+        self.second_player: Player | None = None
+        self.players: list[Player] = []
         self.ghosts: list = []
         self.super_gums: list = []
         self.offset_x: int = 0
@@ -94,6 +96,7 @@ class Game:
         self.very_start_game = pygame.mixer.Sound(
             "./assets/sounds/pac-man-very-start-of-game.mp3"
         )
+        self.dual_playing = False
 
     def _get_font(self, path, size):
         """Create the font image if not exists"""
@@ -116,11 +119,12 @@ class Game:
         """
         big = self._get_font(path="./fonts/pacfont/pac-font.ttf", size=20)
 
-        btn_width, btn_height = 240, 80
-        gap: int = 20  # gap between buttons
+        btn_width, btn_height = 260, 100
+        gap: int = 40  # gap between buttons
 
         menu_items: list[tuple[str, str]] = [
             ("play_btn", "Start Game"),
+            ("dual_playing_btn", "Dual Playing"),
             ("instructions_btn", "How To Play"),
             ("leaderbord_btn", "High Scorers"),
             # ("exit_btn", "Exit Game"),
@@ -132,7 +136,7 @@ class Game:
         )
         start_y = (self.SCREEN_HEIGHT // 2) - (total_height // 2)
 
-        # Create buttons
+        # Create Initial buttons
         for i, (button_name, button_text) in enumerate(menu_items):
             y = start_y + i * (btn_height + gap)
             self.buttons_map[button_name] = Button(
@@ -144,6 +148,7 @@ class Game:
                 font=big,
             )
 
+        # The rest special buttons
         self.buttons_map["exit_btn"] = Button(
             text="Exit Game",
             x=self._centered_x(btn_width),
@@ -302,6 +307,7 @@ class Game:
         self.offset_x = (self.SCREEN_WIDTH - width * CELL_SIZE) // 2
         self.style_42 = width >= 14 and height >= 14
 
+        # Generate the maze with the given width and height
         generator = MazeGenerator(size=(width, height))
         self.maze = generator.maze
 
@@ -310,7 +316,35 @@ class Game:
             self.offset_x, self.corner_coords, self.pattern_42_coords
         )
 
-        self.player = Player(3, 3, self.offset_x, self.p_p_p, self.gums_coords)
+        # TODO: FIRST EXTRACT EVERY MAZE COORDINATES
+        # EXCLUDE THE PATTERN 42 COORDINATES
+        # USE A RANDOM SELECT FROM THE REST OF THE COORDINATES
+        # RENDER THE PLAYER RANDOMLY FROM THE REST OF THE COORDINATES
+        # FIX: THIS SHOULD BE FINXED,
+        self.player = Player(
+            x=3,
+            y=3,
+            offset_x=self.offset_x,
+            p_p_p=self.p_p_p,
+            gums_coords=self.gums_coords,
+            dual_playing=self.dual_playing,
+        )
+        self.second_player = (
+            Player(
+                x=4,
+                y=4,
+                offset_x=self.offset_x,
+                p_p_p=self.p_p_p,
+                gums_coords=self.gums_coords,
+                second_player=True,
+                dual_playing=True,
+            )
+            if self.dual_playing
+            else None
+        )
+        self.players = [
+            p for p in (self.player, self.second_player) if p is not None
+        ]
         self.ghosts = [
             Ghost(gid, x, y, self.offset_x)
             for gid, (x, y) in enumerate(self.corner_coords)
@@ -351,6 +385,7 @@ class Game:
             # Check for exit game
             if event.type == pygame.QUIT or exit_btn.is_clicked(event):
                 self.running = False
+                return
                 continue
 
             if back_btn.is_clicked(event):
@@ -425,11 +460,17 @@ class Game:
 
         # Extract the buttons
         play_btn: Button = self.buttons_map["play_btn"]
+        dual_playing_btn: Button = self.buttons_map["dual_playing_btn"]
         instructions_btn: Button = self.buttons_map["instructions_btn"]
         leaderboard_btn: Button = self.buttons_map["leaderbord_btn"]
         exit_btn: Button = self.buttons_map["exit_btn"]
 
         if play_btn.is_clicked(event):
+            # Set dual_playing back to False
+            self.dual_playing = False
+            self._start_new_run()
+        elif dual_playing_btn.is_clicked(event):
+            self.dual_playing = True
             self._start_new_run()
         elif instructions_btn.is_clicked(event):
             self.state = State.INSTRUCTIONS
@@ -471,14 +512,21 @@ class Game:
             return
 
         now = self.now()
-        assert self.player is not None  # silent lints
-        self.player.update(self.maze, now)
+        assert self.players  # silent lints
+
+        for player in self.players:
+            player.update(self.maze, now)
+
         for ghost in self.ghosts:
+            target = min(
+                self.players,
+                key=lambda p: abs(p.x - ghost.x) + abs(p.y - ghost.y),
+            )
             ghost.update(
                 maze=self.maze,
-                player_cord=(self.player.x, self.player.y),
+                player_cord=(target.x, target.y),
                 now=now,
-                flee=self.player.edible,
+                flee=any(p.edible for p in self.players),
             )
             if not ghost.alive:
                 elapsed = self.now() - ghost.died_time
@@ -494,54 +542,64 @@ class Game:
             self._update_timer()
 
     def _update_edible_state(self):
-        """Update edible state"""
-        if not self.player.edible:
-            return
-
-        elapsed = self.now() - self.player.last_time_edible
-        if elapsed >= EDIBLE_DURATION_MS:
-            self.player.edible = False
-            for ghost in self.ghosts:
-                if ghost.alive:
-                    ghost.ghost = ghost.forms[ghost.direction]
-            return
-
-        blink_form: str = (
-            "edible_2" if elapsed >= EDIBLE_BLINK_AT_MS else "edible_1"
-        )
-        for ghost in self.ghosts:
-            if ghost.alive:
-                ghost.ghost = ghost.forms[blink_form]
-
-    def check_collisions(self):
-        """Check for collisions between player and ghosts"""
-        assert self.player is not None
-        for ghost in self.ghosts:
-            if not ghost.alive or (ghost.x, ghost.y) != (
-                self.player.x,
-                self.player.y,
-            ):
+        """Update the edible timers of all players and ghost forms"""
+        any_edible = False
+        blink = False
+        for player in self.players:
+            if not player.edible:
                 continue
 
-            if self.player.edible:
-                self.player.score += self.p_p_g
+            elapsed = self.now() - player.last_time_edible
+            if elapsed >= EDIBLE_DURATION_MS:
+                player.edible = False
+                continue
+
+            any_edible = True
+            if elapsed >= EDIBLE_BLINK_AT_MS:
+                blink = True
+
+        form: str = (
+            ("edible_2" if blink else "edible_1") if any_edible else None
+        )
+        for ghost in self.ghosts:
+            if not ghost.alive:
+                continue
+            ghost.ghost = (
+                ghost.forms[form]
+                if form is not None
+                else ghost.forms[ghost.direction]
+            )
+
+    def check_collisions(self):
+        """Check for collisions between the players and ghosts"""
+        for ghost in self.ghosts:
+            if not ghost.alive:
+                continue
+
+            hit = next(
+                (p for p in self.players if (p.x, p.y) == (ghost.x, ghost.y)),
+                None,
+            )
+            if hit is None:
+                continue
+
+            if hit.edible:
+                hit.score += self.p_p_g
                 ghost.alive = False
                 ghost.died_time = self.now()
-                ghost.x = self.corner_coords[ghost.id][0]
-                ghost.y = self.corner_coords[ghost.id][1]
-            else:
-                # pass
+                ghost.x, ghost.y = self.corner_coords[ghost.id]
+            elif not self.invisible:
                 # IF YOU WANT TO BECOME INVISIBLE PRESS CRTL + 1
-                if self.invisible:
-                    break
-                self.lives -= 1
+                # self.lives -= 1 # TODO: TRIGGER LATER
                 if self.lives <= 0:
-                    self.total_score += self.player.score
+                    self.total_score += sum(p.score for p in self.players)
                     self._end_run(False)
                 else:
-                    self.player.x, self.player.y = (3, 3)
-                    self.player.rect = self.player.image.get_rect(
-                        center=cell_to_pixel_center(3, 3, self.offset_x)
+                    hit.x, hit.y = hit.spawn
+                    hit.rect = hit.image.get_rect(
+                        center=cell_to_pixel_center(
+                            hit.x, hit.y, self.offset_x
+                        )
                     )
             break
 
@@ -549,22 +607,29 @@ class Game:
             return
 
         for gum in self.super_gums:
-            if not gum.eated and (gum.x, gum.y) == (
-                self.player.x,
-                self.player.y,
-            ):
-                gum.eated = True
-                self.player.score += self.p_p_s_p
-                self.player.edible = True
-                self.player.last_time_edible = self.now()
-                break
+            if gum.eated:
+                continue
+
+            eater = next(
+                (p for p in self.players if (p.x, p.y) == (gum.x, gum.y)),
+                None,
+            )
+            if eater is None:
+                continue
+
+            gum.eated = True
+            eater.score += self.p_p_s_p
+            eater.edible = True
+            eater.last_time_edible = self.now()
+            break
 
     def check_win(self):
-        """Check if the player has won the game"""
-        if self.player.gums_eated < self.total_gums:
+        """Check if the players have cleared the level"""
+        eaten_total = sum(p.gums_eated for p in self.players)
+        if eaten_total < self.total_gums:
             return
 
-        self.total_score += self.player.score
+        self.total_score += sum(p.score for p in self.players)
         self.level += 1
 
         if self.level == len(self.levels):
@@ -579,7 +644,7 @@ class Game:
 
         self.time_left = self.level_time - (self.now() - self.level_start_time)
         if self.time_left <= 0:
-            self.total_score += self.player.score
+            self.total_score += sum(p.score for p in self.players)
             self._end_run(False)
 
     def draw(self):
@@ -632,6 +697,7 @@ class Game:
         self._draw_title(creator=True)
         menu_buttons = [
             self.buttons_map["play_btn"],
+            self.buttons_map["dual_playing_btn"],
             self.buttons_map["instructions_btn"],
             self.buttons_map["leaderbord_btn"],
             self.buttons_map["exit_btn"],
@@ -670,9 +736,9 @@ class Game:
         players: list = sorted(
             self._load_highscores(), key=lambda p: -p["score"]
         )
-        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 14)
-        record_height: int = 35
-        record_width: int = 200
+        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 18)
+        record_height: int = 60
+        record_width: int = 240
 
         if not players:
             surf = text_font.render(
@@ -767,23 +833,42 @@ class Game:
         self._draw_title(creator=True)
         self._draw_level_info()
 
+        # Pellets disappear once any player has stepped on them
+        eaten_cells: set = set()
+        for player in self.players:
+            eaten_cells |= player.moves
+
         for y, row in enumerate(self.maze):
             for x, cell in enumerate(row):
-                self.drawing.draw_cell(
-                    self.screen, cell, x, y, self.player.moves
-                )
+                self.drawing.draw_cell(self.screen, cell, x, y, eaten_cells)
 
         for ghost in self.ghosts:
             ghost.draw(self.screen)
         for gum in self.super_gums:
             gum.draw(self.screen)
-        self.player.draw(self.screen)
+
+        # TODO: INCLUDE SPIRITES
+
+        # Collect all the pygame characters objects
+        sprites = pygame.sprite.Group(self.players)
+
+        # Draw all the characters(sprites)
+        sprites.draw(self.screen)
+
+        # self.player.draw(self.screen)
 
     def _draw_level_info(self):
-        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 12)
-        score_surf = text_font.render(
-            f"Score: {self.player.score}", False, "white"
-        )
+        """Draws the level info"""
+        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 16)
+
+        if self.dual_playing:
+            score_text = (
+                f"P1: {self.players[0].score}   P2: {self.players[1].score}"
+            )
+        else:
+            score_text = f"Score: {self.players[0].score}"
+
+        score_surf = text_font.render(score_text, False, "white")
         timer_surf = text_font.render(
             f"Timer: {max(self.time_left, 0) // 1000}", False, "white"
         )
@@ -796,21 +881,21 @@ class Game:
         #     self.screen, "white", (0, 170), (self.SCREEN_WIDTH, 170), 3
         # )
         self.screen.blit(score_surf, score_surf.get_rect(topleft=(100, 130)))
+        self.screen.blit(lives_surf, lives_surf.get_rect(topleft=(600, 130)))
         self.screen.blit(
-            lives_surf, lives_surf.get_rect(topleft=(100 + 150, 130))
+            timer_surf,
+            timer_surf.get_rect(topright=(self.SCREEN_WIDTH - 100, 130)),
         )
         self.screen.blit(
-            timer_surf, timer_surf.get_rect(topleft=(100 + 310, 130))
-        )
-        self.screen.blit(
-            level_surf, level_surf.get_rect(topleft=(100 + 470, 130))
+            level_surf,
+            level_surf.get_rect(topright=(self.SCREEN_WIDTH - 300, 130)),
         )
 
     def _draw_pause_overlay(self):
         """Draws the pause overlay"""
 
         quit_to_menu_btn = self.buttons_map["quit_to_menu_btn"]
-        # TODO: ADD PAUSE BUTTON
+        # TODO: ADD PAUSE BUTTON AT CORNER OR SOMETHING
 
         overlay = pygame.Surface(
             (self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SRCALPHA
@@ -845,6 +930,7 @@ class Game:
 def main() -> None:
     """Main function"""
 
+    # TODO: THE NEXT LEVEL SHOULD HAVE SOME KIND OF CONSTRAINTS TO PREVENT UNLOGICAL MAZES (sizes)
     config: dict = handle_config_validation()
     pacman = Game(config)
     pacman.run()
