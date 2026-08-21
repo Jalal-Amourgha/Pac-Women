@@ -19,8 +19,10 @@ class WindowConfig(BaseModel):
           it is fixed to 1280x720 which is provided in this validation model
     """
 
-    width: int = Field(1280, ge=500, description="Width must be at least 500")
-    height: int = Field(720, ge=500, description="Height must be at least 500")
+    width: int = Field(1920, ge=500, description="Width must be at least 500")
+    height: int = Field(
+        1080, ge=500, description="Height must be at least 500"
+    )
     seed: NonNegativeInt = 42
     pacgum: NonNegativeInt = 42
 
