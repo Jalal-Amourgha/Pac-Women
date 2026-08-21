@@ -14,22 +14,23 @@ from utils import (
 
 
 class Ghost:
-    def __init__(self, id, x, y, offset_x):
-        self.id = id
-        self.alive = True
+    def __init__(self, id, x, y, offset_x) -> None:
+        self.id: int = id
+        self.alive: bool = True
         self.forms = self._setup_ghosts()
-        self.direction = "DOWN"
+        self.direction: str = "DOWN"
         self.ghost = self.forms[self.direction]
-        self.x = x
-        self.y = y
-        self.offset_x = offset_x
-        self.last_move = 0
+        self.x: int = x
+        self.y: int = y
+        self.offset_x: int = offset_x
+        self.last_move: int = 0
         self.rect = self.ghost.get_rect(
             center=cell_to_pixel_center(self.x, self.y, self.offset_x)
         )
         self.died_time = None
 
-    def _setup_ghosts(self):
+    def _setup_ghosts(self) -> dict:
+        """Setup the ghosts forms"""
         forms: dict = {}
         for form in ("UP", "RIGHT", "DOWN", "LEFT"):
             img_path: str = f"./assets/ghost_{self.id + 1}_{form.lower()}.jpg"
@@ -49,6 +50,7 @@ class Ghost:
         return forms
 
     def bfs(self, maze, goal):
+        """Breadth-first search algorithm"""
         rows = len(maze)
         cols = len(maze[0])
         start = (self.x, self.y)
@@ -83,6 +85,7 @@ class Ghost:
         return []
 
     def _step_to(self, nx, ny):
+        """"""
         dx, dy = nx - self.x, ny - self.y
         for direction, ddx, ddy in DIRECTIONS:
             if (ddx, ddy) == (dx, dy):
@@ -93,14 +96,15 @@ class Ghost:
         return False
 
     def _move_toward(self, maze, goal):
+        """"""
         path = self.bfs(maze, goal)
         if not path:
             return False
         nx, ny = path[0]
         return self._step_to(nx, ny)
 
-    def _move_away(self, maze, player_cord):
-
+    def _move_away(self, maze, player_cord) -> None:
+        """"""
         best = None
         best_dist = -1
         options = DIRECTIONS[:]
@@ -119,7 +123,8 @@ class Ghost:
             return False
         return self._step_to(*best)
 
-    def _move_random(self, maze):
+    def _move_random(self, maze) -> None:
+        """"""
         dirs = DIRECTIONS[:]
         random.shuffle(dirs)
         for direction, dx, dy in dirs:
@@ -131,7 +136,7 @@ class Ghost:
                 return True
         return False
 
-    def update(self, maze, player_cord, now, flee=False):
+    def update(self, maze, player_cord, now, flee=False) -> None:
         """"""
         if not self.alive:
             return
@@ -156,6 +161,11 @@ class Ghost:
 
         self.last_move = now
 
-    def draw(self, screen):
+    def draw(self, screen) -> None:
+        """Draws the ghost on the screen if alive
+
+        Args:
+            screen: Pygame screen
+        """
         if self.alive:
             screen.blit(self.ghost, self.rect)
