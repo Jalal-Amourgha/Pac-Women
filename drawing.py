@@ -14,7 +14,7 @@ class Drawing:
         py = OFFSET_Y + y * CELL_SIZE
 
         if (x, y) in self.pattern_42_coords:
-            pygame.draw.rect(screen, "pink", (px, py, CELL_SIZE, CELL_SIZE))
+            pygame.draw.rect(screen, "yellow", (px, py, CELL_SIZE, CELL_SIZE))
         elif (x, y) not in player_moves and (
             x,
             y,

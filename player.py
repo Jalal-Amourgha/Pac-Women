@@ -13,11 +13,15 @@ class Player:
 
     def __init__(self, x, y, offset_x, p_p_p=10, gums_coords=None):
         """Initialize the player."""
-        self.base_image = pygame.image.load(
+        self.base_img = pygame.image.load(
             "./assets/player_1.jpg"
         ).convert_alpha()
-        self.base_image = pygame.transform.scale(self.base_image, (20, 20))
-        self.image = self.base_image
+        self.active_img = pygame.image.load(
+            "./assets/activated.jpg"
+        ).convert_alpha()
+        self.base_img = pygame.transform.scale(self.base_img, (20, 20))
+        self.active_img = pygame.transform.scale(self.active_img, (20, 20))
+        self.image = self.base_img
         self.direction = "RIGHT"
 
         self.gums_eated = 0
@@ -39,9 +43,10 @@ class Player:
 
         self.last_move = 0
         self.moves = {(self.x, self.y)}
+        self.speed = PLAYER_SPEED
 
     def update(self, maze, now):
-        if now - self.last_move < PLAYER_SPEED:
+        if now - self.last_move < self.speed:
             return
 
         keys = pygame.key.get_pressed()
@@ -76,9 +81,14 @@ class Player:
 
         if moved:
             self.direction = new_direction
-            self.image = pygame.transform.rotate(
-                self.base_image, ROTATION_FOR_DIRECTION[new_direction]
-            )
+            if (self.edible):
+                self.image = pygame.transform.rotate(
+                    self.active_img, ROTATION_FOR_DIRECTION[new_direction]
+                )
+            else:
+                self.image = pygame.transform.rotate(
+                    self.base_img, ROTATION_FOR_DIRECTION[new_direction]
+                )
 
             pos = (self.x, self.y)
             if pos not in self.moves and pos in self.gums_coords:

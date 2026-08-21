@@ -11,7 +11,7 @@
     "points_per_pacgum": 15,
     "points_per_super_pacgum": 50,
     "highscore_filename": "highscores.json",
-    "level_max_time": 900
+    "level_max_time": 90000
   },
   "maps": [
     { "width": 23, "height": 14 },

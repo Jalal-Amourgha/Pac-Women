@@ -1,6 +1,6 @@
 # TODO: LATER MAKE THE FONT DYNAMIC BASED ON SCREEN SIZE
 import json
-
+import math
 import pygame
 
 from button import Button
@@ -80,6 +80,10 @@ class Game:
         self.style_42: bool = False
         self.gums_coords: set = set()
         self.total_gums: int = 0
+
+        # C H E A T E - A T T R I B U T E S
+        self.invisible = False
+        self.stop_time = False
 
         # Map name => button object
         self.buttons_map: dict[str, Button] = {}
@@ -336,6 +340,55 @@ class Game:
             if event.type == pygame.QUIT or exit_btn.is_clicked(event):
                 self.running = False
                 continue
+
+            if back_btn.is_clicked(event):
+                self.state = State.MENU
+                continue
+
+             # C H E A T E - M O D E
+            if (event.type == pygame.KEYDOWN):
+                # Check if Ctrl is held
+                if (pygame.key.get_mods() & pygame.KMOD_CTRL):
+                    if (event.key == pygame.K_1):
+                        # P L A Y E R - I N V I S I B L E
+                        print("Ctrl + 1 was pressed!")
+                        self.invisible = not self.invisible
+
+                    if (event.key == pygame.K_2):
+                        # G H O S T - F R E E Z E D
+                        print("Ctrl + 2 was pressed!")
+                        for ghost in self.ghosts:
+                            ghost.freezed = not ghost.freezed
+
+                    if (event.key == pygame.K_3):
+                        # P L A Y E R - I N C R E A S E - P L A Y E R - S P E E D
+                        print("Ctrl + 3 was pressed!")
+                        self.player.speed = max(self.player.speed-10, 10)
+
+                    if (event.key == pygame.K_4):
+                        # P L A Y E R - S K I P - L E V E L
+                        print("Ctrl + 4 was pressed!")
+                        self.player.gums_eated += (self.rows * self.cols)
+                        self.check_win()
+
+                    if (event.key == pygame.K_5):
+                        # P L A Y E R - I N C R E A S E - S C O R E by 1000
+                        print("Ctrl + 5 was pressed!")
+                        self.player.score += 1000
+
+                    if (event.key == pygame.K_6):
+                        # I M O R T A L E
+                        print("Ctrl + 6 was pressed!")
+                        self.lives = math.inf
+
+                    if (event.key == pygame.K_7):
+                        # S T O P - T I M E
+                        print("Ctrl + 7 was pressed!")
+                        self.stop_time = not self.stop_time
+
+
+
+
             # User inside menu
             if self.state == State.MENU:
                 self._handle_menu_event(event)
@@ -462,16 +515,19 @@ class Game:
                 ghost.x = self.corner_coords[ghost.id][0]
                 ghost.y = self.corner_coords[ghost.id][1]
             else:
-                pass
-                # self.lives -= 1
-                # if self.lives <= 0:
-                #     self.total_score += self.player.score
-                #     self._end_run(False)
-                # else:
-                #     self.player.x, self.player.y = (3, 3)
-                #     self.player.rect = self.player.image.get_rect(
-                #         center=cell_to_pixel_center(3, 3, self.offset_x)
-                #     )
+                # pass
+                # IF YOU WANT TO BECOME INVISIBLE PRESS CRTL + 1
+                if (self.invisible):
+                    break
+                self.lives -= 1
+                if self.lives <= 0:
+                    self.total_score += self.player.score
+                    self._end_run(False)
+                else:
+                    self.player.x, self.player.y = (3, 3)
+                    self.player.rect = self.player.image.get_rect(
+                        center=cell_to_pixel_center(3, 3, self.offset_x)
+                    )
             break
 
         if self.state != State.PLAYING:
@@ -502,6 +558,9 @@ class Game:
             self._new_level()
 
     def _update_timer(self):
+        if (self.stop_time):
+            return
+        
         self.time_left = self.level_time - (self.now() - self.level_start_time)
         if self.time_left <= 0:
             self.total_score += self.player.score
@@ -680,14 +739,10 @@ class Game:
             ),
         )
 
-        # # TODO: CHECK THIS LATER, ??? WHY?? DIDN'T YOU ALREADY HAVE BACK BTN
-        # back_btn.rect = pygame.Rect(
-        #     back_btn.x, 400, back_btn.width, back_btn.height
-        # )
-
         self.name_input.draw(self.screen)
         submit_btn.draw(self.screen)
-        back_btn.draw(self.screen)
+        self.buttons_map["quit_to_menu_btn"].draw(self.screen)  # Fixed
+
 
     def _draw_game(self):
         """"""
@@ -761,7 +816,9 @@ class Game:
             self.update()
             self.draw()
             # Limit to 60 frames per second
-            self.clock.tick(45)
+            # Dayer 30 7it 3ndi pc 3iyan
+            # ms f push ghadi n 60 ofc
+            self.clock.tick(30)
 
         pygame.quit()
 

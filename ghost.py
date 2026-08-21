@@ -28,6 +28,7 @@ class Ghost:
             center=cell_to_pixel_center(self.x, self.y, self.offset_x)
         )
         self.died_time = None
+        self.freezed = False
 
     def _setup_ghosts(self):
         forms: dict = {}
@@ -133,7 +134,7 @@ class Ghost:
 
     def update(self, maze, player_cord, now, flee=False):
         """"""
-        if not self.alive:
+        if not self.alive or self.freezed:
             return
 
         if now - self.last_move < GHOST_SPEED:
