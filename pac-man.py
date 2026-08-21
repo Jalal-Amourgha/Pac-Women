@@ -119,8 +119,8 @@ class Game:
         """
         big = self._get_font(path="./fonts/pacfont/pac-font.ttf", size=20)
 
-        btn_width, btn_height = 240, 80
-        gap: int = 20  # gap between buttons
+        btn_width, btn_height = 260, 100
+        gap: int = 40  # gap between buttons
 
         menu_items: list[tuple[str, str]] = [
             ("play_btn", "Start Game"),
@@ -736,9 +736,9 @@ class Game:
         players: list = sorted(
             self._load_highscores(), key=lambda p: -p["score"]
         )
-        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 14)
-        record_height: int = 35
-        record_width: int = 200
+        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 18)
+        record_height: int = 60
+        record_width: int = 240
 
         if not players:
             surf = text_font.render(
@@ -858,11 +858,12 @@ class Game:
         # self.player.draw(self.screen)
 
     def _draw_level_info(self):
-        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 12)
+        """Draws the level info"""
+        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 16)
 
         if self.dual_playing:
             score_text = (
-                f"P1: {self.players[0].score} P2: {self.players[1].score}"
+                f"P1: {self.players[0].score}   P2: {self.players[1].score}"
             )
         else:
             score_text = f"Score: {self.players[0].score}"
@@ -880,14 +881,14 @@ class Game:
         #     self.screen, "white", (0, 170), (self.SCREEN_WIDTH, 170), 3
         # )
         self.screen.blit(score_surf, score_surf.get_rect(topleft=(100, 130)))
+        self.screen.blit(lives_surf, lives_surf.get_rect(topleft=(600, 130)))
         self.screen.blit(
-            lives_surf, lives_surf.get_rect(topleft=(100 + 150, 130))
+            timer_surf,
+            timer_surf.get_rect(topright=(self.SCREEN_WIDTH - 100, 130)),
         )
         self.screen.blit(
-            timer_surf, timer_surf.get_rect(topleft=(100 + 310, 130))
-        )
-        self.screen.blit(
-            level_surf, level_surf.get_rect(topleft=(100 + 470, 130))
+            level_surf,
+            level_surf.get_rect(topright=(self.SCREEN_WIDTH - 300, 130)),
         )
 
     def _draw_pause_overlay(self):
@@ -929,6 +930,7 @@ class Game:
 def main() -> None:
     """Main function"""
 
+    # TODO: THE NEXT LEVEL SHOULD HAVE SOME KIND OF CONSTRAINTS TO PREVENT UNLOGICAL MAZES (sizes)
     config: dict = handle_config_validation()
     pacman = Game(config)
     pacman.run()
