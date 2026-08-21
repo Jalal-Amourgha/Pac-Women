@@ -8,11 +8,22 @@ from utils import (
 )
 
 
-class Player:
+class Player(pygame.sprite.Sprite):
     """Player class for Pac-Man."""
 
-    def __init__(self, x, y, offset_x, p_p_p=10, gums_coords=None):
+    def __init__(
+        self,
+        x,
+        y,
+        offset_x,
+        p_p_p=10,
+        gums_coords=None,
+        second_player=False,
+        dual_playing=False,
+    ):
         """Initialize the player."""
+        super().__init__()
+
         self.base_img = pygame.image.load(
             "./assets/player_1.jpg"
         ).convert_alpha()
@@ -29,6 +40,7 @@ class Player:
         self.p_p_p = p_p_p
         self.x = x
         self.y = y
+        self.spawn = (x, y)
         self.offset_x = offset_x
         self.edible = False
         # FIX: mutable default arguments (`gums_coords=set()`) are shared
@@ -44,20 +56,19 @@ class Player:
         self.last_move = 0
         self.moves = {(self.x, self.y)}
         self.speed = PLAYER_SPEED
+        # Feature for dual playing
+        self.second_player: bool = second_player
+        self.dual_playing: bool = dual_playing
 
     def update(self, maze, now):
         if now - self.last_move < self.speed:
             return
 
-        keys = pygame.key.get_pressed()
         moved = False
         new_direction = self.direction
 
-        # Extract direction keys
-        UP = keys[pygame.K_UP] or keys[pygame.K_w] or keys[pygame.K_k]
-        DOWN = keys[pygame.K_DOWN] or keys[pygame.K_s] or keys[pygame.K_j]
-        LEFT = keys[pygame.K_LEFT] or keys[pygame.K_a] or keys[pygame.K_h]
-        RIGHT = keys[pygame.K_RIGHT] or keys[pygame.K_d] or keys[pygame.K_l]
+        # Get the playing keys based on the used mode
+        UP, DOWN, LEFT, RIGHT = self._handle_playing_mode()
 
         if UP and can_move(maze, self.x, self.y, "UP"):
             self.y -= 1
@@ -81,7 +92,7 @@ class Player:
 
         if moved:
             self.direction = new_direction
-            if (self.edible):
+            if self.edible:
                 self.image = pygame.transform.rotate(
                     self.active_img, ROTATION_FOR_DIRECTION[new_direction]
                 )
@@ -102,5 +113,34 @@ class Player:
 
         self.last_move = now
 
-    def draw(self, screen):
-        screen.blit(self.image, self.rect)
+    def _handle_playing_mode(self) -> tuple[bool, bool, bool, bool]:
+        """Handle the playing keys based on the used mode.
+
+        Returns:
+            tuple(bool, bool, bool, bool): The playing keys
+        """
+
+        keys = pygame.key.get_pressed()
+        UP, DOWN, LEFT, RIGHT = False, False, False, False
+
+        # Extract direction keys, if one player, it can play with several keys
+        if not self.dual_playing:
+            UP = keys[pygame.K_UP] or keys[pygame.K_w] or keys[pygame.K_k]
+            DOWN = keys[pygame.K_DOWN] or keys[pygame.K_s] or keys[pygame.K_j]
+            LEFT = keys[pygame.K_LEFT] or keys[pygame.K_a] or keys[pygame.K_h]
+            RIGHT = (
+                keys[pygame.K_RIGHT] or keys[pygame.K_d] or keys[pygame.K_l]
+            )
+        if self.dual_playing and self.second_player:
+            UP = keys[pygame.K_UP] or keys[pygame.K_k]
+            DOWN = keys[pygame.K_DOWN] or keys[pygame.K_j]
+            LEFT = keys[pygame.K_LEFT] or keys[pygame.K_h]
+            RIGHT = keys[pygame.K_RIGHT] or keys[pygame.K_l]
+
+        if self.dual_playing and not self.second_player:
+            UP = keys[pygame.K_w]
+            DOWN = keys[pygame.K_s]
+            LEFT = keys[pygame.K_a]
+            RIGHT = keys[pygame.K_d]
+
+        return UP, DOWN, LEFT, RIGHT
