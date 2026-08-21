@@ -7,6 +7,18 @@ from utils import read_config
 
 
 class WindowConfig(BaseModel):
+    """Configuration for the window
+
+    Args:
+        width: The width of the window. Defaults to 1280.
+        height: The height of the window. Defaults to 720.
+        seed: The seed for the random number generator. Defaults to 42.
+        pacgum: The seed for the random number generator. Defaults to 42.
+
+    NOTE: The window size is not configurable from the config file,
+          it is fixed to 1280x720 which is provided in this validation model
+    """
+
     width: int = Field(1280, ge=500, description="Width must be at least 500")
     height: int = Field(720, ge=500, description="Height must be at least 500")
     seed: NonNegativeInt = 42
