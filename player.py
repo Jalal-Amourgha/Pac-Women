@@ -24,17 +24,30 @@ class Player(pygame.sprite.Sprite):
         """Initialize the player."""
         super().__init__()
 
-        self.base_img = pygame.image.load(
-            "./assets/images/player_1.jpg"
+        # Load player frames
+        base_img = pygame.image.load(
+            "./assets/images/player_frame1.jpg"
         ).convert_alpha()
-        self.active_img = pygame.image.load(
+        action_img = pygame.image.load("./assets/images/player_frame2.jpg")
+
+        active_img = pygame.image.load(
             "./assets/images/activated.jpg"
         ).convert_alpha()
-        self.base_img = pygame.transform.scale(self.base_img, (20, 20))
-        self.active_img = pygame.transform.scale(self.active_img, (20, 20))
-        self.image = self.base_img
-        self.direction = "RIGHT"
 
+        self.base_img = pygame.transform.scale(base_img, (20, 20))
+        self.action_img = pygame.transform.scale(action_img, (20, 20))
+        self.active_img = pygame.transform.scale(active_img, (20, 20))
+        self.image = self.base_img
+
+        # Set animation frames
+        self.frames: list = [
+            self.base_img,  # mouth closed
+            self.action_img,  # mouth open
+        ]
+        self.frame_index: int = 0
+        self.frame_timer: int = 0
+
+        self.direction = "RIGHT"
         self.gums_eated = 0
         self.score = 0
         self.p_p_p = p_p_p
@@ -60,14 +73,25 @@ class Player(pygame.sprite.Sprite):
         self.second_player: bool = second_player
         self.dual_playing: bool = dual_playing
 
-    def update(self, maze, now):
+        # Sounds
+        self.eat_dot_sound = pygame.mixer.Sound(
+            "./assets/sounds/pacman-eat-dots.wav"
+        )
+
+    def update(self, maze, now) -> None:
+        """Update the player's position based on the maze and the current time.
+
+        Args:
+            maze (list): The maze layout.
+            now (int): The current time in milliseconds.
+        """
         if now - self.last_move < self.speed:
             return
 
         moved = False
         new_direction = self.direction
 
-        # Get the playing keys based on the used mode
+        # Get the playing keys based on the used mode (single or dual)
         UP, DOWN, LEFT, RIGHT = self._handle_playing_mode()
 
         if UP and can_move(maze, self.x, self.y, "UP"):
@@ -90,22 +114,38 @@ class Player(pygame.sprite.Sprite):
             new_direction = "RIGHT"
             moved = True
 
+        # Animate the player (switch the frame every 100ms)
+        if now - self.frame_timer >= 200:
+            self.frame_index = (self.frame_index + 1) % len(self.frames)
+            self.frame_timer = now
+
+            src_img = self.frames[self.frame_index]
+
+            self.image = pygame.transform.rotate(
+                src_img,
+                ROTATION_FOR_DIRECTION[self.direction],
+            )
+        else:
+            # Initialize src_img with the current frame
+            src_img = self.frames[self.frame_index]
+
+        # Chec if the player has eaten a gum
+        pos = (self.x, self.y)
+        if pos not in self.moves and pos in self.gums_coords:
+            self.eat_dot_sound.play()
+            self.score += self.p_p_p
+            self.gums_eated += 1
+
+        # Rotate if the player has moved and register the move.
         if moved:
             self.direction = new_direction
-            if self.edible:
-                self.image = pygame.transform.rotate(
-                    self.active_img, ROTATION_FOR_DIRECTION[new_direction]
-                )
-            else:
-                self.image = pygame.transform.rotate(
-                    self.base_img, ROTATION_FOR_DIRECTION[new_direction]
-                )
 
-            pos = (self.x, self.y)
-            if pos not in self.moves and pos in self.gums_coords:
-                self.score += self.p_p_p
-                self.gums_eated += 1
+            # TODO: UPDATE LATER TO STORE THE ROTATED AND JUST INSTEAD OF CALCULATING IT EACH TIME.
+            self.image = pygame.transform.rotate(
+                src_img, ROTATION_FOR_DIRECTION[new_direction]
+            )
 
+            # NOTE: WHY THIS?
             self.rect = self.image.get_rect(
                 center=cell_to_pixel_center(self.x, self.y, self.offset_x)
             )
