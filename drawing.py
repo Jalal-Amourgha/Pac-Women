@@ -12,7 +12,26 @@ class Drawing:
         self.super_gums_coords = super_gums_coords
         self.pattern_42_coords = pattern_42_coords
 
-    def draw_cell(self, screen, cell, x, y, player_moves):
+    def draw_cell(
+        self,
+        screen: pygame.Surface,
+        cell: int,
+        x: int,
+        y: int,
+        player_moves: set,
+    ) -> None:
+        """Draws a cell on the screen based on its value and position
+
+        Args:
+            screen (pygame.Surface): The surface to draw on
+            cell (int): The value of the cell
+            x (int): The x position of the cell
+            y (int): The y position of the cell
+            player_moves (set): The set of moves made by the player
+
+        Returns:
+            None
+        """
         px = self.offset_x + x * CELL_SIZE
         py = OFFSET_Y + y * CELL_SIZE
 

@@ -25,10 +25,10 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
 
         self.base_img = pygame.image.load(
-            "./assets/player_1.jpg"
+            "./assets/images/player_1.jpg"
         ).convert_alpha()
         self.active_img = pygame.image.load(
-            "./assets/activated.jpg"
+            "./assets/images/activated.jpg"
         ).convert_alpha()
         self.base_img = pygame.transform.scale(self.base_img, (20, 20))
         self.active_img = pygame.transform.scale(self.active_img, (20, 20))

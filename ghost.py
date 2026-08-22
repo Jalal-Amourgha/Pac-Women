@@ -34,17 +34,19 @@ class Ghost:
         """Setup the ghosts forms"""
         forms: dict = {}
         for form in ("UP", "RIGHT", "DOWN", "LEFT"):
-            img_path: str = f"./assets/ghost_{self.id + 1}_{form.lower()}.jpg"
+            img_path: str = (
+                f"./assets/images/ghost_{self.id + 1}_{form.lower()}.jpg"
+            )
 
             ghost_form_img = pygame.image.load(img_path).convert_alpha()
             forms[form] = pygame.transform.scale(ghost_form_img, (25, 25))
 
         forms["edible_1"] = pygame.transform.scale(
-            pygame.image.load("./assets/edible_1.jpg").convert_alpha(),
+            pygame.image.load("./assets/images/edible_1.jpg").convert_alpha(),
             (25, 25),
         )
         forms["edible_2"] = pygame.transform.scale(
-            pygame.image.load("./assets/edible_2.jpg").convert_alpha(),
+            pygame.image.load("./assets/images/edible_2.jpg").convert_alpha(),
             (25, 25),
         )
 

@@ -98,6 +98,14 @@ class Game:
         )
         self.dual_playing = False
 
+        # Level Info panel stuff
+        self.level_panel_font = self._get_font(
+            "./fonts/press/PressStart2P.ttf", 16
+        )
+        live_surf = pygame.image.load("assets/images/life_heart.png").convert()
+        self.live_surf = pygame.transform.scale(live_surf, (25, 25))
+        # empty_live_surf = pygame.image.load("assets/images/life_heart.png").convert()
+
     def _get_font(self, path, size):
         """Create the font image if not exists"""
         key = (path, size)
@@ -187,8 +195,8 @@ class Game:
             text="Submit",
             x=self._centered_x(width=btn_width),
             y=self._centered_y(height=btn_height),
-            width=220,
-            height=60,
+            width=btn_width,
+            height=btn_height,
             font=big,
         )
 
@@ -528,6 +536,7 @@ class Game:
                 now=now,
                 flee=any(p.edible for p in self.players),
             )
+            # Add a delay to the ghost spawn
             if not ghost.alive:
                 elapsed = self.now() - ghost.died_time
                 if elapsed >= 10000:
@@ -590,7 +599,7 @@ class Game:
                 ghost.x, ghost.y = self.corner_coords[ghost.id]
             elif not self.invisible:
                 # IF YOU WANT TO BECOME INVISIBLE PRESS CRTL + 1
-                # self.lives -= 1 # TODO: TRIGGER LATER
+                self.lives -= 1  # TODO: TRIGGER LATER
                 if self.lives <= 0:
                     self.total_score += sum(p.score for p in self.players)
                     self._end_run(False)
@@ -858,8 +867,7 @@ class Game:
         # self.player.draw(self.screen)
 
     def _draw_level_info(self):
-        """Draws the level info"""
-        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 16)
+        """Draws the level info panel"""
 
         if self.dual_playing:
             score_text = (
@@ -868,12 +876,11 @@ class Game:
         else:
             score_text = f"Score: {self.players[0].score}"
 
-        score_surf = text_font.render(score_text, False, "white")
-        timer_surf = text_font.render(
+        score_surf = self.level_panel_font.render(score_text, False, "white")
+        timer_surf = self.level_panel_font.render(
             f"Timer: {max(self.time_left, 0) // 1000}", False, "white"
         )
-        lives_surf = text_font.render(f"Lives: {self.lives}", False, "white")
-        level_surf = text_font.render(
+        level_surf = self.level_panel_font.render(
             f"Level: {self.level + 1}/{len(self.levels)}", False, "white"
         )
 
@@ -881,7 +888,16 @@ class Game:
         #     self.screen, "white", (0, 170), (self.SCREEN_WIDTH, 170), 3
         # )
         self.screen.blit(score_surf, score_surf.get_rect(topleft=(100, 130)))
-        self.screen.blit(lives_surf, lives_surf.get_rect(topleft=(600, 130)))
+
+        # Draw lives hearts
+        gap: int = 0
+        for _ in range(self.lives):
+            self.screen.blit(
+                source=self.live_surf,
+                dest=self.live_surf.get_rect(topleft=(100 + gap, 80)),
+            )
+            gap += 40
+
         self.screen.blit(
             timer_surf,
             timer_surf.get_rect(topright=(self.SCREEN_WIDTH - 100, 130)),
