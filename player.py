@@ -34,9 +34,9 @@ class Player(pygame.sprite.Sprite):
             "./assets/images/activated.jpg"
         ).convert_alpha()
 
-        self.base_img = pygame.transform.scale(base_img, (20, 20))
-        self.action_img = pygame.transform.scale(action_img, (20, 20))
-        self.active_img = pygame.transform.scale(active_img, (20, 20))
+        self.base_img = pygame.transform.scale(base_img, (25, 25))
+        self.action_img = pygame.transform.scale(action_img, (25, 25))
+        self.active_img = pygame.transform.scale(active_img, (25, 25))
         self.image = self.base_img
 
         # Set animation frames

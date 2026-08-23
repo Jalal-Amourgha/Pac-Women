@@ -5,6 +5,7 @@
 # TODO: ADD A RESUME BUTTON AFTER PAUSE THE GAME
 # TODO: LAUGH AT THE PLAYER IF ITS DIE WITH A SMALL SCORE
 # FIX: SOMETIME THE BACK TO MENU BUTTON IS QUITTING THE GAME
+# TODO: ADD A QUICK DELAY FREEZE FOR THE GHOSTS AFTER GETTING THE PLAYER
 import json
 import math
 
@@ -43,8 +44,8 @@ class Game:
         """
 
         # Extract window size
-        self.SCREEN_WIDTH = config["window"]["width"]
-        self.SCREEN_HEIGHT = config["window"]["height"]
+        self.SCREEN_WIDTH: int = config["window"]["width"]
+        self.SCREEN_HEIGHT: int = config["window"]["height"]
 
         pygame.init()
         # Create the screen (display serface)
@@ -101,18 +102,31 @@ class Game:
         # Map name => button object
         self.buttons_map: dict[str, Button | TextInput] = {}
         self._build_ui()
-        self.very_start_game = pygame.mixer.Sound(
+
+        # Sound
+        self.very_start_game_sound = pygame.mixer.Sound(
             "./assets/sounds/pac-man-very-start-of-game.mp3"
         )
-        self.dual_playing = False
+        # self.eat_ghost_sound = pygame.mixer.Sound(
+        #     "./assets/sounds/pac-man-eat-ghost.mp3"
+        # )
+        # self.eat_pacgum_sound = pygame.mixer.Sound(
+        #     "./assets/sounds/pac-man-eat-pacgum.mp3"
+        # )
+        # self.eat_super_pacgum_sound = pygame.mixer.Sound(
+        #     "./assets/sounds/pac-man-eat-super-pacgum.mp3"
+        # )
 
+        self.dual_playing = False
         # Level Info panel stuff
         self.level_panel_font = self._get_font(
             "./fonts/press/PressStart2P.ttf", 16
         )
         live_surf = pygame.image.load("assets/images/life_heart.png").convert()
         self.live_surf = pygame.transform.scale(live_surf, (25, 25))
-        # empty_live_surf = pygame.image.load("assets/images/life_heart.png").convert()
+
+        # animation
+        # self.hole_animation = []
 
     def _get_font(self, path, size):
         """Create the font image if not exists"""
@@ -147,10 +161,10 @@ class Game:
         ]
 
         # Calculate places based on their total sizes
-        total_height = (
+        total_height: int = (
             len(menu_items) * btn_height + (len(menu_items) - 1) * gap
         )
-        start_y = (self.SCREEN_HEIGHT // 2) - (total_height // 2)
+        start_y: int = (self.SCREEN_HEIGHT // 2) - (total_height // 2)
 
         # Create Initial buttons
         for i, (button_name, button_text) in enumerate(menu_items):
@@ -534,6 +548,7 @@ class Game:
             player.update(self.maze, now)
 
         for ghost in self.ghosts:
+            # Check the closest player
             target = min(
                 self.players,
                 key=lambda p: abs(p.x - ghost.x) + abs(p.y - ghost.y),
@@ -593,6 +608,7 @@ class Game:
             if not ghost.alive:
                 continue
 
+            # Check if the ghost collides with a player
             hit = next(
                 (p for p in self.players if (p.x, p.y) == (ghost.x, ghost.y)),
                 None,
@@ -601,14 +617,20 @@ class Game:
                 continue
 
             if hit.edible:
+                # self.eat_ghost_sound.play()
+
                 hit.score += self.p_p_g
                 ghost.alive = False
                 ghost.died_time = self.now()
                 ghost.x, ghost.y = self.corner_coords[ghost.id]
             elif not self.invisible:
                 # IF YOU WANT TO BECOME INVISIBLE PRESS CRTL + 1
-                self.lives -= 1  # TODO: TRIGGER LATER
+                # self.lives -= 1  # TODO: TRIGGER LATER
                 if self.lives <= 0:
+                    # # self.game_over_sound.play()
+                    # if total_score <= 100:
+                    #     # Display sacrasme text
+
                     self.total_score += sum(p.score for p in self.players)
                     self._end_run(False)
                 else:
@@ -938,7 +960,7 @@ class Game:
 
     def run(self):
         """Runs the game"""
-        self.very_start_game.play()
+        self.very_start_game_sound.play()
         while self.running:
             self.events()
             self.update()
@@ -946,7 +968,7 @@ class Game:
             # Limit to 60 frames per second
             # Dayer 30 7it 3ndi pc 3iyan
             # ms f push ghadi n 60 ofc
-            self.clock.tick(30)
+            self.clock.tick(60)
 
         pygame.quit()
 

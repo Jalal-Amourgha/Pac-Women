@@ -5,7 +5,7 @@ from enum import Enum, auto
 from custom_print import print_red
 
 # TODO: REPLACE ALL THOSE CONFIG TO BE COMING FROM A CONFIG FILE
-CELL_SIZE = 30
+CELL_SIZE = 40
 WALL_SIZE = 4
 
 OFFSET_Y = 170
