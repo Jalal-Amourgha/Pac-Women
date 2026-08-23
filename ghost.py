@@ -87,7 +87,7 @@ class Ghost:
 
         return []
 
-    def _step_to(self, nx, ny):
+    def _step_to(self, nx, ny) -> bool:
         """"""
         dx, dy = nx - self.x, ny - self.y
         for direction, ddx, ddy in DIRECTIONS:
@@ -106,7 +106,7 @@ class Ghost:
         nx, ny = path[0]
         return self._step_to(nx, ny)
 
-    def _move_away(self, maze, player_cord) -> None:
+    def _move_away(self, maze, player_cord) -> bool:
         """"""
         best = None
         best_dist = -1
@@ -126,7 +126,7 @@ class Ghost:
             return False
         return self._step_to(*best)
 
-    def _move_random(self, maze) -> None:
+    def _move_random(self, maze) -> bool:
         """"""
         dirs = DIRECTIONS[:]
         random.shuffle(dirs)

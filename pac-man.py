@@ -1,4 +1,10 @@
 # TODO: LATER MAKE THE FONT DYNAMIC BASED ON SCREEN SIZE
+# TODO: START THE PLAR AT THE CENTER OF THE MAZE
+# TODO: MAKE SOME GOOD LEVELS AT CONFIG FILE
+# TODO: ADD A RESTART BUTTON AFTER THE GAME IS OVER
+# TODO: ADD A RESUME BUTTON AFTER PAUSE THE GAME
+# TODO: LAUGH AT THE PLAYER IF ITS DIE WITH A SMALL SCORE
+# FIX: SOMETIME THE BACK TO MENU BUTTON IS QUITTING THE GAME
 import json
 import math
 
@@ -43,7 +49,9 @@ class Game:
         pygame.init()
         # Create the screen (display serface)
         self.screen = pygame.display.set_mode(
-            size=(self.SCREEN_WIDTH, self.SCREEN_HEIGHT)
+            (self.SCREEN_WIDTH, self.SCREEN_HEIGHT),
+            # Borderless window
+            pygame.NOFRAME | pygame.SCALED,
         )
         pygame.display.set_caption(title="Pac-Man")
 
@@ -534,7 +542,7 @@ class Game:
                 maze=self.maze,
                 player_cord=(target.x, target.y),
                 now=now,
-                flee=any(p.edible for p in self.players),
+                flee=any(player.edible for player in self.players),
             )
             # Add a delay to the ghost spawn
             if not ghost.alive:
@@ -682,10 +690,10 @@ class Game:
         """Draws the game title"""
 
         # text_font = self._get_font("./fonts/pacfont/pac-font.ttf", 30)
-        text_font = self._get_font("./fonts/arcade/ARCADE_I.TTF", 30)
+        text_font = self._get_font("./fonts/arcade/ARCADE_I.TTF", 60)
         game_name = text_font.render(text, False, color)
         game_name_rect = game_name.get_rect(
-            center=(self.SCREEN_WIDTH // 2, 40)
+            center=(self.SCREEN_WIDTH // 2, 70)
         )
         self.screen.blit(game_name, game_name_rect)
 
@@ -693,10 +701,10 @@ class Game:
             creator_font = self._get_font("./fonts/press/PressStart2P.ttf", 10)
             creator_font.set_italic(True)
             creator_name = creator_font.render(
-                "jamourgh & aarid", False, color
+                "By jamourgh & aarid", False, color
             )
             creator_rect = creator_name.get_rect(
-                center=(self.SCREEN_WIDTH // 2, 80)
+                center=(self.SCREEN_WIDTH // 2, 110)
             )
             self.screen.blit(creator_name, creator_rect)
 
