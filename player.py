@@ -13,10 +13,10 @@ class Player(pygame.sprite.Sprite):
 
     def __init__(
         self,
-        x,
-        y,
-        offset_x,
-        p_p_p=10,
+        x: int,
+        y: int,
+        offset_x: int,
+        p_p_p: int = 10,
         gums_coords=None,
         second_player=False,
         dual_playing=False,
@@ -154,7 +154,14 @@ class Player(pygame.sprite.Sprite):
         self.last_move = now
 
     def _handle_playing_mode(self) -> tuple[bool, bool, bool, bool]:
-        """Handle the playing keys based on the used mode.
+        """Handle the playing keys based on the used mode
+
+        Single player:
+            Can play with WASD, KJHL, or arrow keys
+
+        Dual player:
+            1p: Can play with WASD
+            2p: Can play with KJHL, or arrow keys
 
         Returns:
             tuple(bool, bool, bool, bool): The playing keys
