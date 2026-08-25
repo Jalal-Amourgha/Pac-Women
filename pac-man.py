@@ -5,7 +5,7 @@
 # TODO: ADD A RESUME BUTTON AFTER PAUSE THE GAME
 # TODO: LAUGH AT THE PLAYER IF ITS DIE WITH A SMALL SCORE
 # FIX: SOMETIME THE BACK TO MENU BUTTON IS QUITTING THE GAME
-# TODO: ADD A QUICK DELAY FREEZE FOR THE GHOSTS AFTER GETTING THE PLAYER
+# TODO: ADD A QUICK DELAY FREEZE FOR THE GHOSTS AFTER They GETTING THE PLAYER
 import json
 import math
 
@@ -95,6 +95,8 @@ class Game:
         self.gums_coords: set = set()
         self.total_gums: int = 0
 
+        self.ghost_freeze_until: int = 0
+
         # C H E A T E - A T T R I B U T E S
         self.invisible = False
         self.stop_time = False
@@ -105,7 +107,14 @@ class Game:
 
         # Sound
         self.very_start_game_sound = pygame.mixer.Sound(
-            "./assets/sounds/pac-man-very-start-of-game.mp3"
+            "./assets/sounds/pac-man-very-start-of-game.wav"
+        )
+        self.round_start_sound = pygame.mixer.Sound(
+            "./assets/sounds/pac-man-start-run.wav"
+        )
+        self.round_start_delay = 0
+        self.player_die_sound = pygame.mixer.Sound(
+            "./assets/sounds/pac-man-die.wav"
         )
         # self.eat_ghost_sound = pygame.mixer.Sound(
         #     "./assets/sounds/pac-man-eat-ghost.mp3"
@@ -252,6 +261,11 @@ class Game:
         self.pause_offset: int = 0
         self.paused_since: int | None = None
         self._new_level()
+        self.very_start_game_sound.stop()
+        self.round_start_sound.play()
+        self.round_start_delay = (
+            self.now() + self.round_start_sound.get_length() * 1000
+        )
         self.state = State.PLAYING
 
     def _end_run(self, won):
@@ -541,29 +555,36 @@ class Game:
         if self.state != State.PLAYING:
             return
 
+        # A quick delay at the round start so the player can catchup
+        if self.now() < self.round_start_delay:
+            return
+
         now = self.now()
         assert self.players  # silent lints
 
         for player in self.players:
             player.update(self.maze, now)
 
-        for ghost in self.ghosts:
-            # Check the closest player
-            target = min(
-                self.players,
-                key=lambda p: abs(p.x - ghost.x) + abs(p.y - ghost.y),
-            )
-            ghost.update(
-                maze=self.maze,
-                player_cord=(target.x, target.y),
-                now=now,
-                flee=any(player.edible for player in self.players),
-            )
-            # Add a delay to the ghost spawn
-            if not ghost.alive:
-                elapsed = self.now() - ghost.died_time
-                if elapsed >= 10000:
-                    ghost.alive = True
+        # Update ghosts if they not freezed, (freezed immediately after
+        # catching the player so he can respawn comfort)
+        if self.now() >= self.ghost_freeze_until:
+            for ghost in self.ghosts:
+                # Check the closest player
+                target = min(
+                    self.players,
+                    key=lambda p: abs(p.x - ghost.x) + abs(p.y - ghost.y),
+                )
+                ghost.update(
+                    maze=self.maze,
+                    player_cord=(target.x, target.y),
+                    now=now,
+                    flee=any(player.edible for player in self.players),
+                )
+                # Add a delay to the ghost spawn
+                if not ghost.alive:
+                    elapsed = self.now() - ghost.died_time
+                    if elapsed >= 10000:
+                        ghost.alive = True
 
         self._update_edible_state()
         self.check_collisions()
@@ -609,21 +630,20 @@ class Game:
                 continue
 
             # Check if the ghost collides with a player
-            hit = next(
+            hit_player = next(
                 (p for p in self.players if (p.x, p.y) == (ghost.x, ghost.y)),
                 None,
             )
-            if hit is None:
+            if hit_player is None:
                 continue
 
-            if hit.edible:
-                # self.eat_ghost_sound.play()
-
-                hit.score += self.p_p_g
+            if hit_player.edible:
+                hit_player.score += self.p_p_g
                 ghost.alive = False
                 ghost.died_time = self.now()
                 ghost.x, ghost.y = self.corner_coords[ghost.id]
             elif not self.invisible:
+                self.player_die_sound.play()
                 # IF YOU WANT TO BECOME INVISIBLE PRESS CRTL + 1
                 # self.lives -= 1  # TODO: TRIGGER LATER
                 if self.lives <= 0:
@@ -634,10 +654,11 @@ class Game:
                     self.total_score += sum(p.score for p in self.players)
                     self._end_run(False)
                 else:
-                    hit.x, hit.y = hit.spawn
-                    hit.rect = hit.image.get_rect(
+                    self.ghost_freeze_until = self.now() + 1500
+                    hit_player.x, hit_player.y = hit_player.spawn
+                    hit_player.rect = hit_player.image.get_rect(
                         center=cell_to_pixel_center(
-                            hit.x, hit.y, self.offset_x
+                            hit_player.x, hit_player.y, self.offset_x
                         )
                     )
             break
