@@ -3,6 +3,7 @@
 # TODO: LAUGH AT THE PLAYER IF ITS DIE WITH A SMALL SCORE
 # TODO: CHECK IF THE SUPER GUM IS REGENERATED
 # FIX: SOMETIME THE BACK TO MENU BUTTON IS QUITTING THE GAME
+# TODO: AFTER PLAYER DIE HE SHOULD BE UNVISIBLE OR UNTOUCHABLE FOR 2 1 OR 2 SEC
 import json
 import math
 
@@ -135,22 +136,22 @@ class Game:
         # animation
         # self.hole_animation = []
 
-    def _get_font(self, path, size):
+    def _get_font(self, path: str, size: int) -> pygame.font.Font:
         """Create the font image if not exists"""
         key = (path, size)
         if key not in self._fonts:
             self._fonts[key] = pygame.font.Font(path, size)
         return self._fonts[key]
 
-    def _centered_x(self, width=220) -> int:
+    def _centered_x(self, width: int = 220) -> int:
         """Center the button on the x axis of the screen"""
         return (self.SCREEN_WIDTH // 2) - (width // 2)
 
-    def _centered_y(self, height=60) -> int:
+    def _centered_y(self, height: int = 60) -> int:
         """Center the button on the y axis of the screen"""
         return (self.SCREEN_HEIGHT // 2) - (height // 2)
 
-    def _build_ui(self):
+    def _build_ui(self) -> None:
         """
         Build the UI (mostly buttons)
         """
@@ -254,21 +255,25 @@ class Game:
             font=big,
         )
 
-    def now(self):
-        return pygame.time.get_ticks() - self.pause_offset
+    def now(self) -> int:
+        """Return the current game time in milliseconds"""
+        return int(pygame.time.get_ticks()) - self.pause_offset
 
-    def _enter_pause(self):
+    def _enter_pause(self) -> None:
+        """Pause the game and record the pause start time"""
         self.paused_since = pygame.time.get_ticks()
         self.state = State.PAUSED
 
-    def _resume(self):
+    def _resume(self) -> None:
+        """Resume the game from a paused state"""
         if self.paused_since is not None:
             self.pause_offset += pygame.time.get_ticks() - self.paused_since
             self.paused_since = None
         self.state = State.PLAYING
 
-    def _start_new_run(self):
-        self.level: int = 0
+    def _start_new_run(self) -> None:
+        """Reset the run state and start a fresh run"""
+        self.level_number: int = 0
         self.lives: int = self.initial_lives
         self.total_score: int = 0
         self.pause_offset: int = 0
@@ -281,7 +286,7 @@ class Game:
         )
         self.state = State.PLAYING
 
-    def _end_run(self, won):
+    def _end_run(self, won: bool) -> None:
         """Display the win end game screen"""
         self.pending_score = self.total_score
         self.last_run_won = won
@@ -294,7 +299,7 @@ class Game:
         )
         self.state = State.ENTER_NAME
 
-    def _extract_pattern_42(self):
+    def _extract_pattern_42(self) -> None:
         """
         Extract the coordinates of the pattern 42
         """
@@ -335,8 +340,8 @@ class Game:
                 (col // 2 + y - x_even, row // 2 + x - y_even)
             )
 
-    def _extract_coords(self):
-        """ """
+    def _extract_coords(self) -> None:
+        """Extract the corner and gum coordinates for the current level"""
         self.corner_coords = [
             (0, 0),
             (self.cols - 1, 0),
@@ -355,7 +360,7 @@ class Game:
         )
         self.total_gums = len(self.gums_coords) - 1
 
-    def _new_level(self):
+    def _new_level(self) -> None:
         """(Re)builds the maze, player, ghosts, and pellets for
         self.level. Used both for starting a fresh run and for advancing
         to the next level within a run."""
@@ -374,16 +379,20 @@ class Game:
             self.offset_x, self.corner_coords, self.pattern_42_coords
         )
 
-        # Callculate the closest cell to the center while avoiding 42 pattern
+        # Calculate the closest cell to the center while avoiding 42 pattern
         center_x = self.cols // 2
         center_y = self.rows // 2
-        spawn_cell: tuple = min(
-            self.gums_coords,
-            key=lambda cell: abs(cell[0] - center_x) + abs(cell[1] - center_y),
+        dist_to_center = lambda cell: abs(
+            cell[0] - center_x
+        ) + abs(cell[1] - center_y)
+        p1_cell: tuple[int, int] = min(self.gums_coords, key=dist_to_center)
+        p2_cell: tuple[int, int] = min(
+            (cell for cell in self.gums_coords if cell != p1_cell),
+            key=dist_to_center,
         )
         self.player = Player(
-            x=spawn_cell[0],
-            y=spawn_cell[1],
+            x=p1_cell[0],
+            y=p1_cell[1],
             offset_x=self.offset_x,
             p_p_p=self.p_p_p,
             gums_coords=self.gums_coords,
@@ -391,8 +400,8 @@ class Game:
         )
         self.second_player = (
             Player(
-                x=spawn_cell[0],
-                y=spawn_cell[1] + 1,
+                x=p2_cell[0],
+                y=p2_cell[1],
                 offset_x=self.offset_x,
                 p_p_p=self.p_p_p,
                 gums_coords=self.gums_coords,
@@ -428,14 +437,14 @@ class Game:
             print_red({e})
             return []
 
-    def _save_highscore(self, username: str, score: int):
+    def _save_highscore(self, username: str, score: int) -> None:
         """Saves the highscore"""
         players = self._load_highscores()
         players.append({"username": username or "Player", "score": score})
         with open(self.highscore_filename, "w") as f:
             json.dump({"players": players}, f, indent=2)
 
-    def events(self):
+    def events(self) -> None:
         """Handle events"""
 
         exit_btn = self.buttons_map["exit_btn"]
@@ -469,7 +478,7 @@ class Game:
                             ghost.freezed = not ghost.freezed
 
                     if event.key == pygame.K_3:
-                        # P L A Y E R - I N C R E A S E - P L A Y E R - S P E E D
+                        # P L A Y E R - I N C R E A S E - S P E E D
                         print("Ctrl + 3 was pressed!")
                         self.player.speed = max(self.player.speed - 10, 10)
 
@@ -512,7 +521,7 @@ class Game:
             elif self.state == State.ENTER_NAME:
                 self._handle_enter_name_event(event)
 
-    def _handle_menu_event(self, event):
+    def _handle_menu_event(self, event: pygame.event.Event) -> None:
         """Handle menu events
 
         Args:
@@ -542,7 +551,7 @@ class Game:
         if exit_btn.is_clicked(event):
             self.running = False
 
-    def _handle_pause_event(self, event):
+    def _handle_pause_event(self, event: pygame.event.Event) -> None:
         """Handle pause events"""
         pause_btn = self.buttons_map["pause_btn"]
         resume_btn = self.buttons_map["resume_btn"]
@@ -558,8 +567,12 @@ class Game:
         elif quit_to_menu_btn.is_clicked(event):
             self.state = State.MENU
 
-    def _handle_enter_name_event(self, event):
-        """"""
+    def _handle_enter_name_event(self, event: pygame.event.Event) -> None:
+        """Handle the name input while saving the final score
+
+        Args:
+            event: Pygame event
+        """
         submitted = self.name_input.handle_event(event)
         submit_btn: Button = self.buttons_map["submit_btn"]
 
@@ -569,7 +582,7 @@ class Game:
             )
             self.state = State.MENU
 
-    def update(self):
+    def update(self) -> None:
         """Update the game state"""
 
         if self.state != State.PLAYING:
@@ -614,7 +627,7 @@ class Game:
         if self.state == State.PLAYING:
             self._update_timer()
 
-    def _update_edible_state(self):
+    def _update_edible_state(self) -> None:
         """Update the edible timers of all players and ghost forms"""
         any_edible = False
         blink = False
@@ -631,7 +644,7 @@ class Game:
             if elapsed >= EDIBLE_BLINK_AT_MS:
                 blink = True
 
-        form: str = (
+        form: str | None = (
             ("edible_2" if blink else "edible_1") if any_edible else None
         )
         for ghost in self.ghosts:
@@ -643,7 +656,7 @@ class Game:
                 else ghost.forms[ghost.direction]
             )
 
-    def check_collisions(self):
+    def check_collisions(self) -> None:
         """Check for collisions between the players and ghosts"""
         for ghost in self.ghosts:
             if not ghost.alive:
@@ -703,7 +716,7 @@ class Game:
             eater.last_time_edible = self.now()
             break
 
-    def check_win(self):
+    def check_win(self) -> None:
         """Check if the players have cleared the level"""
         eaten_total = sum(p.gums_eated for p in self.players)
         if eaten_total < self.total_gums:
@@ -719,7 +732,8 @@ class Game:
         else:
             self._new_level()
 
-    def _update_timer(self):
+    def _update_timer(self) -> None:
+        """Update the level timer and end the run when time runs out"""
         if self.stop_time:
             return
 
@@ -728,7 +742,7 @@ class Game:
             self.total_score += sum(p.score for p in self.players)
             self._end_run(False)
 
-    def draw(self):
+    def draw(self) -> None:
         """Draw the game based on the current state"""
         if self.state == State.MENU:
             self._draw_menu()
@@ -750,7 +764,7 @@ class Game:
         text: str = "Pac Women",
         color: str = "yellow",
         creator: bool = False,
-    ):
+    ) -> None:
         """Draws the game title"""
 
         # text_font = self._get_font("./fonts/pacfont/pac-font.ttf", 30)
@@ -772,7 +786,7 @@ class Game:
             )
             self.screen.blit(creator_name, creator_rect)
 
-    def _draw_menu(self):
+    def _draw_menu(self) -> None:
         """Draws the main menu"""
         self.screen.fill((0, 0, 0))  # Clear screen with black background
         self._draw_title(creator=True)
@@ -787,7 +801,8 @@ class Game:
         for btn in menu_buttons:
             btn.draw(self.screen)
 
-    def _draw_instructions(self):
+    def _draw_instructions(self) -> None:
+        """Draws the instructions screen"""
         self.screen.fill((0, 0, 0))
         self._draw_title("How To Play")
 
@@ -809,7 +824,7 @@ class Game:
         back_btn = self.buttons_map["back_btn"]
         back_btn.draw(self.screen)
 
-    def _draw_highscores(self):
+    def _draw_highscores(self) -> None:
         """Draws the highscores screen"""
         self.screen.fill((0, 0, 0))
         self._draw_title("Top Players")
@@ -839,7 +854,8 @@ class Game:
                 elif idx == 2:
                     color = "#CD7F32"
                 # else:
-                #     name_surf = text_font.render(str(player['username']), False, 'white')
+                #     name_surf = text_font.render(
+                #         str(player['username']), False, 'white')
 
                 # name_surf = text_font.render(
                 #     f"{idx + 1}- {player['username']}", False, color
@@ -870,7 +886,7 @@ class Game:
         back_btn = self.buttons_map["back_btn"]
         back_btn.draw(self.screen)
 
-    def _draw_enter_name(self):
+    def _draw_enter_name(self) -> None:
         """Draws the enter name screen after a game is over"""
 
         # Extract buttons
@@ -908,7 +924,7 @@ class Game:
         submit_btn.draw(self.screen)
         quit_to_menu_btn.draw(self.screen)
 
-    def _draw_game(self):
+    def _draw_game(self) -> None:
         """Draws the game screen"""
         self.screen.fill((0, 0, 0))
         self._draw_title(creator=True)
@@ -937,7 +953,7 @@ class Game:
 
         # self.player.draw(self.screen)
 
-    def _draw_level_info(self):
+    def _draw_level_info(self) -> None:
         """Draws the level info panel"""
 
         if self.dual_playing:
@@ -952,7 +968,7 @@ class Game:
             f"Timer: {max(self.time_left, 0) // 1000}", False, "white"
         )
         level_surf = self.level_panel_font.render(
-            f"Level: {self.level + 1}/{len(self.levels)}", False, "white"
+            f"Level: {self.level_number + 1}/{len(self.levels)}", False, "white"
         )
 
         # pygame.draw.line(
@@ -978,7 +994,7 @@ class Game:
             level_surf.get_rect(topright=(self.SCREEN_WIDTH - 300, 130)),
         )
 
-    def _draw_pause_overlay(self):
+    def _draw_pause_overlay(self) -> None:
         """Draws the pause overlay"""
 
         quit_to_menu_btn = self.buttons_map["quit_to_menu_btn"]
@@ -1000,7 +1016,7 @@ class Game:
         # self.paus_btn.draw(self.screen)
         quit_to_menu_btn.draw(self.screen)
 
-    def run(self):
+    def run(self) -> None:
         """Runs the game"""
         self.very_start_game_sound.play()
         while self.running:
@@ -1008,8 +1024,6 @@ class Game:
             self.update()
             self.draw()
             # Limit to 60 frames per second
-            # Dayer 30 7it 3ndi pc 3iyan
-            # ms f push ghadi n 60 ofc
             self.clock.tick(60)
 
         pygame.quit()
@@ -1018,7 +1032,6 @@ class Game:
 def main() -> None:
     """Main function"""
 
-    # TODO: THE NEXT LEVEL SHOULD HAVE SOME KIND OF CONSTRAINTS TO PREVENT UNLOGICAL MAZES (sizes)
     config: dict = handle_config_validation()
     pacman = Game(config)
     pacman.run()

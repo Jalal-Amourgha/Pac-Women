@@ -10,13 +10,13 @@ class WindowConfig(BaseModel):
     """Configuration for the window
 
     Args:
-        width: The width of the window. Defaults to 1280.
-        height: The height of the window. Defaults to 720.
+        width: The width of the window (minimum 500). Defaults to 1920.
+        height: The height of the window (minimum 500). Defaults to 1080.
         seed: The seed for the random number generator. Defaults to 42.
         pacgum: The seed for the random number generator. Defaults to 42.
 
-    NOTE: The window size is not configurable from the config file,
-          it is fixed to 1280x720 which is provided in this validation model
+    NOTE: Fields missing or stripped from the config file fall back
+          to the default values defined here
     """
 
     width: int = Field(1920, ge=500, description="Width must be at least 500")
@@ -28,6 +28,8 @@ class WindowConfig(BaseModel):
 
 
 class PlayerConfig(BaseModel):
+    """Configuration for the player (lives, scoring, and level time)"""
+
     lives: NonNegativeInt = 3
     points_per_ghost: NonNegativeInt = 200
     points_per_pacgum: NonNegativeInt = 15
@@ -37,12 +39,16 @@ class PlayerConfig(BaseModel):
 
 
 class MapConfig(BaseModel):
+    """Configuration for a single map (maze width and height)"""
+
     width: NonNegativeInt = 23
     height: NonNegativeInt = 14
 
 
 # Validate the config file, (the above model is realted to it)
 class Config_Validator(BaseModel):
+    """Root model validating the whole config file structure"""
+
     window: WindowConfig
     player: PlayerConfig
     maps: list[MapConfig]

@@ -4,11 +4,9 @@ version = "0.1.0"
 description = ""
 readme = "README.md"
 requires-python = "==3.10.13"
-dependencies = [
-    "pydantic>=2.13.4",
-    "pygame>=2.6.1",
-    "toml>=0.10.2",
-]
+dependencies = ["pydantic>=2.13.4", "pygame>=2.6.1", "toml>=0.10.2"]
 
 [tool.ruff]
 line-length = 79
+docstring-code-format = true
+docstring-code-line-length = 79
