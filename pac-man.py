@@ -4,8 +4,8 @@
 # TODO: ADD A RESTART BUTTON AFTER THE GAME IS OVER
 # TODO: ADD A RESUME BUTTON AFTER PAUSE THE GAME
 # TODO: LAUGH AT THE PLAYER IF ITS DIE WITH A SMALL SCORE
+# TODO: CHECK IF THE SUPER GUM IS REGENERATED
 # FIX: SOMETIME THE BACK TO MENU BUTTON IS QUITTING THE GAME
-# TODO: ADD A QUICK DELAY FREEZE FOR THE GHOSTS AFTER They GETTING THE PLAYER
 import json
 import math
 
@@ -14,10 +14,10 @@ import pygame
 from button import Button
 from custom_print import print_green, print_red
 from drawing import Drawing
-from ghost import *
+from ghost import Ghost, cell_to_pixel_center
 from mazegenerator.mazegenerator import MazeGenerator
 from player import Player
-from superGum import *
+from superGum import SuperGum
 from text import TextInput
 from utils import (
     CELL_SIZE,
@@ -115,6 +115,9 @@ class Game:
         self.round_start_delay = 0
         self.player_die_sound = pygame.mixer.Sound(
             "./assets/sounds/pac-man-die.wav"
+        )
+        self.game_win_sound = pygame.mixer.Sound(
+            "./assets/sounds/pac-man-win.wav"
         )
         # self.eat_ghost_sound = pygame.mixer.Sound(
         #     "./assets/sounds/pac-man-eat-ghost.mp3"
@@ -239,7 +242,22 @@ class Game:
             font=self._get_font("./fonts/press/PressStart2P.ttf", 10),
         )
         # TODO: CHECK THIS BUTTON LATER
-        self.buttons_map["paus_btn"] = Button("Pause", 0, 0, 220, 60, big)
+        self.buttons_map["pause_btn"] = Button(
+            "||",
+            0,
+            0,
+            60,
+            60,
+            big,
+        )
+        self.buttons_map["resume_btn"] = Button(
+            text="Resume",
+            x=self._centered_x(btn_width),
+            y=self._centered_y(btn_height),
+            width=btn_width,
+            height=btn_height,
+            font=big,
+        )
 
     def now(self):
         return pygame.time.get_ticks() - self.pause_offset
@@ -269,6 +287,7 @@ class Game:
         self.state = State.PLAYING
 
     def _end_run(self, won):
+        """Display the win end game screen"""
         self.pending_score = self.total_score
         self.last_run_won = won
         self.name_input = TextInput(
@@ -360,14 +379,16 @@ class Game:
             self.offset_x, self.corner_coords, self.pattern_42_coords
         )
 
-        # TODO: FIRST EXTRACT EVERY MAZE COORDINATES
-        # EXCLUDE THE PATTERN 42 COORDINATES
-        # USE A RANDOM SELECT FROM THE REST OF THE COORDINATES
-        # RENDER THE PLAYER RANDOMLY FROM THE REST OF THE COORDINATES
-        # FIX: THIS SHOULD BE FINXED,
+        # Callculate the closest cell to the center while avoiding 42 pattern
+        center_x = self.cols // 2
+        center_y = self.rows // 2
+        spawn_cell: tuple = min(
+            self.gums_coords,
+            key=lambda cell: abs(cell[0] - center_x) + abs(cell[1] - center_y),
+        )
         self.player = Player(
-            x=3,
-            y=3,
+            x=spawn_cell[0],
+            y=spawn_cell[1],
             offset_x=self.offset_x,
             p_p_p=self.p_p_p,
             gums_coords=self.gums_coords,
@@ -375,8 +396,8 @@ class Game:
         )
         self.second_player = (
             Player(
-                x=4,
-                y=4,
+                x=spawn_cell[0],
+                y=spawn_cell[1] + 1,
                 offset_x=self.offset_x,
                 p_p_p=self.p_p_p,
                 gums_coords=self.gums_coords,
@@ -424,6 +445,7 @@ class Game:
 
         exit_btn = self.buttons_map["exit_btn"]
         back_btn = self.buttons_map["back_btn"]
+        pause_btn = self.buttons_map["pause_btn"]
 
         for event in pygame.event.get():
             # Check for exit game
@@ -487,6 +509,7 @@ class Game:
                 if (
                     event.type == pygame.KEYDOWN
                     and event.key == pygame.K_ESCAPE
+                    or pause_btn.is_clicked(event)
                 ):
                     self._enter_pause()
             elif self.state == State.PAUSED:
@@ -526,13 +549,15 @@ class Game:
 
     def _handle_pause_event(self, event):
         """Handle pause events"""
-        paus_btn = self.buttons_map["paus_btn"]
+        pause_btn = self.buttons_map["pause_btn"]
+        resume_btn = self.buttons_map["resume_btn"]
         quit_to_menu_btn = self.buttons_map["quit_to_menu_btn"]
 
         if (
             event.type == pygame.KEYDOWN
             and event.key == pygame.K_ESCAPE
-            or paus_btn.is_clicked(event)
+            or pause_btn.is_clicked(event)
+            or resume_btn.is_clicked(event)
         ):
             self._resume()
         elif quit_to_menu_btn.is_clicked(event):
@@ -693,6 +718,7 @@ class Game:
         self.level += 1
 
         if self.level == len(self.levels):
+            self.game_win_sound.play()
             self._end_run(True)
             # pygame.time.wait(3000)
         else:
@@ -892,6 +918,7 @@ class Game:
         self.screen.fill((0, 0, 0))
         self._draw_title(creator=True)
         self._draw_level_info()
+        self.buttons_map["pause_btn"].draw(self.screen)
 
         # Pellets disappear once any player has stepped on them
         eaten_cells: set = set()
@@ -962,6 +989,8 @@ class Game:
         """Draws the pause overlay"""
 
         quit_to_menu_btn = self.buttons_map["quit_to_menu_btn"]
+        resume_btn = self.buttons_map["resume_btn"]
+
         # TODO: ADD PAUSE BUTTON AT CORNER OR SOMETHING
 
         overlay = pygame.Surface(
@@ -976,6 +1005,7 @@ class Game:
             text, text.get_rect(center=(self.SCREEN_WIDTH // 2, 150))
         )
 
+        resume_btn.draw(self.screen)
         # self.paus_btn.draw(self.screen)
         quit_to_menu_btn.draw(self.screen)
 
