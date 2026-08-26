@@ -14,7 +14,10 @@ from utils import (
 
 
 class Ghost:
-    def __init__(self, id, x, y, offset_x) -> None:
+    """Ghost class for Pac-Man."""
+
+    def __init__(self, id: int, x: int, y: int, offset_x: int) -> None:
+        """Initialize the ghost."""
         self.id: int = id
         self.alive: bool = True
         self.forms = self._setup_ghosts()
@@ -30,7 +33,7 @@ class Ghost:
         self.died_time = None
         self.freezed = False
 
-    def _setup_ghosts(self) -> dict:
+    def _setup_ghosts(self) -> dict[str, pygame.Surface]:
         """Setup the ghosts forms"""
         forms: dict = {}
         for form in ("UP", "RIGHT", "DOWN", "LEFT"):
@@ -52,8 +55,20 @@ class Ghost:
 
         return forms
 
-    def bfs(self, maze, goal):
-        """Breadth-first search algorithm"""
+    def bfs(
+        self, maze: list[list[int]], goal: tuple[int, int]
+    ) -> list[tuple[int, int]]:
+        """
+        Breadth-first search algorithm
+
+        Args:
+            maze (list[list[int]]): The maze layout
+            goal (tuple[int, int]): Target cell coordinates
+
+        Returns:
+            list[tuple[int, int]]: Path from the ghost cell to the goal,
+            empty if unreachable
+        """
         rows = len(maze)
         cols = len(maze[0])
         start = (self.x, self.y)
@@ -62,7 +77,9 @@ class Ghost:
             return []
 
         visited = {start}
-        queue = deque([(start, [])])
+        queue: deque[
+            tuple[tuple[int, int], list[tuple[int, int]]]
+        ] = deque([(start, [])])
 
         while queue:
             (x, y), path = queue.popleft()
@@ -87,8 +104,8 @@ class Ghost:
 
         return []
 
-    def _step_to(self, nx, ny) -> bool:
-        """"""
+    def _step_to(self, nx: int, ny: int) -> bool:
+        """Move the ghost one cell to (nx, ny) and update its form"""
         dx, dy = nx - self.x, ny - self.y
         for direction, ddx, ddy in DIRECTIONS:
             if (ddx, ddy) == (dx, dy):
@@ -98,16 +115,20 @@ class Ghost:
                 return True
         return False
 
-    def _move_toward(self, maze, goal):
-        """"""
+    def _move_toward(
+        self, maze: list[list[int]], goal: tuple[int, int]
+    ) -> bool:
+        """Move the ghost one step along the shortest path to the goal"""
         path = self.bfs(maze, goal)
         if not path:
             return False
         nx, ny = path[0]
         return self._step_to(nx, ny)
 
-    def _move_away(self, maze, player_cord) -> bool:
-        """"""
+    def _move_away(
+        self, maze: list[list[int]], player_cord: tuple[int, int]
+    ) -> bool:
+        """Move the ghost to the neighboring cell farthest from the player"""
         best = None
         best_dist = -1
         options = DIRECTIONS[:]
@@ -126,8 +147,8 @@ class Ghost:
             return False
         return self._step_to(*best)
 
-    def _move_random(self, maze) -> bool:
-        """"""
+    def _move_random(self, maze: list[list[int]]) -> bool:
+        """Move the ghost to a random available neighboring cell"""
         dirs = DIRECTIONS[:]
         random.shuffle(dirs)
         for direction, dx, dy in dirs:
@@ -139,8 +160,22 @@ class Ghost:
                 return True
         return False
 
-    def update(self, maze, player_cord, now, flee=False) -> None:
-        """"""
+    def update(
+        self,
+        maze: list[list[int]],
+        player_cord: tuple[int, int],
+        now: int,
+        flee: bool = False,
+    ) -> None:
+        """
+        Update the ghost position based on the maze and the current time
+
+        Args:
+            maze (list[list[int]]): The maze layout
+            player_cord (tuple[int, int]): The closest player cell
+            now (int): The current time in milliseconds
+            flee (bool): True when the ghost must run away from the player
+        """
         if not self.alive or self.freezed:
             return
 
@@ -164,7 +199,7 @@ class Ghost:
 
         self.last_move = now
 
-    def draw(self, screen) -> None:
+    def draw(self, screen: pygame.Surface) -> None:
         """Draws the ghost on the screen if alive
 
         Args:

@@ -4,13 +4,22 @@ import pygame
 class TextInput:
     """A class for handling text input."""
 
-    def __init__(self, x, y, width, height, font, max_len=12):
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        font: pygame.font.Font,
+        max_len: int = 12,
+    ) -> None:
+        """Initialize the text input."""
         self.rect = pygame.Rect(x, y, width, height)
         self.font = font
         self.text = ""
         self.max_len = max_len
 
-    def handle_event(self, event):
+    def handle_event(self, event: pygame.event.Event) -> bool:
         """Returns True when Enter is pressed (submit)."""
         if event.type != pygame.KEYDOWN:
             return False
@@ -29,7 +38,8 @@ class TextInput:
 
         return False
 
-    def draw(self, surface):
+    def draw(self, surface: pygame.Surface) -> None:
+        """Draws the text input box with a blinking cursor"""
         pygame.draw.rect(surface, "white", self.rect, border_radius=6)
         pygame.draw.rect(surface, "yellow", self.rect, 3, border_radius=6)
 

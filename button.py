@@ -2,6 +2,8 @@ import pygame
 
 
 class Button:
+    """Button class for the game menus."""
+
     def __init__(
         self,
         text: str,
@@ -9,10 +11,11 @@ class Button:
         y: int,
         width: int,
         height: int,
-        font,
+        font: pygame.font.Font,
         text_color: str = "black",
         bg_color: str = "yellow",
-    ):
+    ) -> None:
+        """Initialize the button."""
         self.text = text
         self.x = x
         self.y = y
@@ -25,8 +28,8 @@ class Button:
         self.text_surf = self.font.render(self.text, True, self.text_color)
         self.text_rect = self.text_surf.get_rect(center=self.rect.center)
 
-    def draw(self, surface):
-        """"""
+    def draw(self, surface: pygame.Surface) -> None:
+        """Draws the button with a hover effect on the given surface"""
         mouse_pos = pygame.mouse.get_pos()
 
         # Set the hover effect
@@ -43,7 +46,7 @@ class Button:
         pygame.draw.rect(surface, text_color, inner_rect)
         surface.blit(text_surf, text_rect)
 
-    def is_clicked(self, event):
+    def is_clicked(self, event: pygame.event.Event) -> bool:
         """
         Check for a mouse clicked with the left mouse button
 

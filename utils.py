@@ -42,7 +42,9 @@ class State(Enum):
     ENTER_NAME = auto()
 
 
-def can_move(maze, x, y, direction: str):
+def can_move(
+    maze: list[list[int]], x: int, y: int, direction: str
+) -> bool:
     """
     Returns true if the player can move in the given direction
     """
@@ -64,7 +66,9 @@ def can_move(maze, x, y, direction: str):
     return False
 
 
-def cell_to_pixel_center(x, y, offset_x, offset_y=OFFSET_Y):
+def cell_to_pixel_center(
+    x: int, y: int, offset_x: int, offset_y: int = OFFSET_Y
+) -> tuple[int, int]:
     """
     Single source of truth for converting a grid cell to its pixel
     center. offset_x is passed explicitly (rather than read from a global)

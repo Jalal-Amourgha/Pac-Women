@@ -6,7 +6,12 @@ from utils import CELL_SIZE, OFFSET_Y, WALL_SIZE
 class Drawing:
     """Draws the maze on the screen"""
 
-    def __init__(self, offset_x, super_gums_coords, pattern_42_coords):
+    def __init__(
+        self,
+        offset_x: int,
+        super_gums_coords: set[tuple[int, int]],
+        pattern_42_coords: set[tuple[int, int]],
+    ) -> None:
         """Initializes the drawing object"""
         self.offset_x = offset_x
         self.super_gums_coords = super_gums_coords

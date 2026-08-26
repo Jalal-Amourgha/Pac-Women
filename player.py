@@ -17,10 +17,10 @@ class Player(pygame.sprite.Sprite):
         y: int,
         offset_x: int,
         p_p_p: int = 10,
-        gums_coords=None,
-        second_player=False,
-        dual_playing=False,
-    ):
+        gums_coords: set[tuple[int, int]] | None = None,
+        second_player: bool = False,
+        dual_playing: bool = False,
+    ) -> None:
         """Initialize the player."""
         super().__init__()
 
@@ -78,7 +78,7 @@ class Player(pygame.sprite.Sprite):
             "./assets/sounds/pacman-eat-dots.wav"
         )
 
-    def update(self, maze, now) -> None:
+    def update(self, maze: list[list[int]], now: int) -> None:
         """Update the player's position based on the maze and the current time.
 
         Args:
