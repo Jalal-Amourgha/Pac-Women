@@ -1,8 +1,5 @@
-# TODO: LATER MAKE THE FONT DYNAMIC BASED ON SCREEN SIZE
-# TODO: START THE PLAR AT THE CENTER OF THE MAZE
-# TODO: MAKE SOME GOOD LEVELS AT CONFIG FILE
 # TODO: ADD A RESTART BUTTON AFTER THE GAME IS OVER
-# TODO: ADD A RESUME BUTTON AFTER PAUSE THE GAME
+
 # TODO: LAUGH AT THE PLAYER IF ITS DIE WITH A SMALL SCORE
 # TODO: CHECK IF THE SUPER GUM IS REGENERATED
 # FIX: SOMETIME THE BACK TO MENU BUTTON IS QUITTING THE GAME
@@ -26,8 +23,6 @@ from utils import (
     State,
 )
 from validation import handle_config_validation
-
-# NOTE: DO NOT IMPORT BLINDLY WITH '*', USE SPECIFIC MODULES
 
 
 class Game:
@@ -129,7 +124,7 @@ class Game:
         #     "./assets/sounds/pac-man-eat-super-pacgum.mp3"
         # )
 
-        self.dual_playing = False
+        self.dual_playing: bool = False
         # Level Info panel stuff
         self.level_panel_font = self._get_font(
             "./fonts/press/PressStart2P.ttf", 16
@@ -715,9 +710,9 @@ class Game:
             return
 
         self.total_score += sum(p.score for p in self.players)
-        self.level += 1
+        self.level_number += 1
 
-        if self.level == len(self.levels):
+        if self.level_number == len(self.levels):
             self.game_win_sound.play()
             self._end_run(True)
             # pygame.time.wait(3000)
@@ -934,8 +929,6 @@ class Game:
         for gum in self.super_gums:
             gum.draw(self.screen)
 
-        # TODO: INCLUDE SPIRITES
-
         # Collect all the pygame characters objects
         sprites = pygame.sprite.Group(self.players)
 
@@ -990,8 +983,6 @@ class Game:
 
         quit_to_menu_btn = self.buttons_map["quit_to_menu_btn"]
         resume_btn = self.buttons_map["resume_btn"]
-
-        # TODO: ADD PAUSE BUTTON AT CORNER OR SOMETHING
 
         overlay = pygame.Surface(
             (self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SRCALPHA

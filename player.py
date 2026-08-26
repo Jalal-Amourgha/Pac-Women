@@ -68,7 +68,7 @@ class Player(pygame.sprite.Sprite):
 
         self.last_move = 0
         self.moves = {(self.x, self.y)}
-        self.speed = PLAYER_SPEED
+        self.speed: int = PLAYER_SPEED
         # Feature for dual playing
         self.second_player: bool = second_player
         self.dual_playing: bool = dual_playing
