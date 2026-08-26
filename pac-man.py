@@ -3,6 +3,7 @@
 # TODO: LAUGH AT THE PLAYER IF ITS DIE WITH A SMALL SCORE
 # TODO: CHECK IF THE SUPER GUM IS REGENERATED
 # FIX: SOMETIME THE BACK TO MENU BUTTON IS QUITTING THE GAME
+# TODO: AFTER PLAYER DIE HE SHOULD BE UNVISIBLE OR UNTOUCHABLE FOR 2 1 OR 2 SEC
 import json
 import math
 
@@ -272,7 +273,7 @@ class Game:
 
     def _start_new_run(self) -> None:
         """Reset the run state and start a fresh run"""
-        self.level: int = 0
+        self.level_number: int = 0
         self.lives: int = self.initial_lives
         self.total_score: int = 0
         self.pause_offset: int = 0
@@ -378,16 +379,20 @@ class Game:
             self.offset_x, self.corner_coords, self.pattern_42_coords
         )
 
-        # Callculate the closest cell to the center while avoiding 42 pattern
+        # Calculate the closest cell to the center while avoiding 42 pattern
         center_x = self.cols // 2
         center_y = self.rows // 2
-        spawn_cell: tuple = min(
-            self.gums_coords,
-            key=lambda cell: abs(cell[0] - center_x) + abs(cell[1] - center_y),
+        dist_to_center = lambda cell: abs(
+            cell[0] - center_x
+        ) + abs(cell[1] - center_y)
+        p1_cell: tuple[int, int] = min(self.gums_coords, key=dist_to_center)
+        p2_cell: tuple[int, int] = min(
+            (cell for cell in self.gums_coords if cell != p1_cell),
+            key=dist_to_center,
         )
         self.player = Player(
-            x=spawn_cell[0],
-            y=spawn_cell[1],
+            x=p1_cell[0],
+            y=p1_cell[1],
             offset_x=self.offset_x,
             p_p_p=self.p_p_p,
             gums_coords=self.gums_coords,
@@ -395,8 +400,8 @@ class Game:
         )
         self.second_player = (
             Player(
-                x=spawn_cell[0],
-                y=spawn_cell[1] + 1,
+                x=p2_cell[0],
+                y=p2_cell[1],
                 offset_x=self.offset_x,
                 p_p_p=self.p_p_p,
                 gums_coords=self.gums_coords,
@@ -639,7 +644,7 @@ class Game:
             if elapsed >= EDIBLE_BLINK_AT_MS:
                 blink = True
 
-        form: str = (
+        form: str | None = (
             ("edible_2" if blink else "edible_1") if any_edible else None
         )
         for ghost in self.ghosts:
@@ -963,7 +968,7 @@ class Game:
             f"Timer: {max(self.time_left, 0) // 1000}", False, "white"
         )
         level_surf = self.level_panel_font.render(
-            f"Level: {self.level + 1}/{len(self.levels)}", False, "white"
+            f"Level: {self.level_number + 1}/{len(self.levels)}", False, "white"
         )
 
         # pygame.draw.line(
@@ -1019,8 +1024,6 @@ class Game:
             self.update()
             self.draw()
             # Limit to 60 frames per second
-            # Dayer 30 7it 3ndi pc 3iyan
-            # ms f push ghadi n 60 ofc
             self.clock.tick(60)
 
         pygame.quit()
