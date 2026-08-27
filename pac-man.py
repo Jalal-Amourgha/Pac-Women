@@ -133,6 +133,19 @@ class Game:
         live_surf = pygame.image.load("assets/images/life_heart.png").convert()
         self.live_surf = pygame.transform.scale(live_surf, (25, 25))
 
+        self.pacwoman_img = pygame.image.load(
+            "assets/images/ms_pacman.png"
+        ).convert_alpha()
+        self.pacwoman_img = pygame.transform.scale(
+            self.pacwoman_img, (539, 874)
+        )
+        self.pacwoman_img = pygame.transform.flip(
+            self.pacwoman_img, True, False
+        )
+        self.pacwoman_rect = self.pacwoman_img.get_rect(
+            bottomleft=(10, self.SCREEN_HEIGHT)
+        )
+
         # animation
         # self.hole_animation = []
 
@@ -157,7 +170,7 @@ class Game:
         """
         big = self._get_font(path="./fonts/pacfont/pac-font.ttf", size=20)
 
-        btn_width, btn_height = 260, 100
+        btn_width, btn_height = 400, 110
         gap: int = 40  # gap between buttons
 
         menu_items: list[tuple[str, str]] = [
@@ -196,14 +209,14 @@ class Game:
             font=big,
         )
 
-        self.buttons_map["back_btn"] = Button(
-            "Back",
-            self._centered_x(width=btn_width),
-            self.SCREEN_HEIGHT - 200,
-            btn_width,
-            btn_height,
-            big,
-        )
+        # self.buttons_map["back_btn"] = Button(
+        #     "Back",
+        #     self._centered_x(width=btn_width),
+        #     self.SCREEN_HEIGHT - 280,
+        #     btn_width,
+        #     btn_height,
+        #     big,
+        # )
         self.buttons_map["continue_btn"] = Button(
             "Continue",
             self._centered_x(width=btn_width),
@@ -215,7 +228,7 @@ class Game:
         self.buttons_map["quit_to_menu_btn"] = Button(
             text="Quit to Menu",
             x=self._centered_x(btn_width),
-            y=self.SCREEN_HEIGHT - 200,
+            y=self.SCREEN_HEIGHT - 280,
             width=btn_width,
             height=btn_height,
             font=big,
@@ -382,13 +395,13 @@ class Game:
         # Calculate the closest cell to the center while avoiding 42 pattern
         center_x = self.cols // 2
         center_y = self.rows // 2
-        dist_to_center = lambda cell: abs(
-            cell[0] - center_x
-        ) + abs(cell[1] - center_y)
-        p1_cell: tuple[int, int] = min(self.gums_coords, key=dist_to_center)
+        p1_cell: tuple[int, int] = min(
+            self.gums_coords,
+            key=lambda cell: abs(cell[0] - center_x) + abs(cell[1] - center_y)
+        )
         p2_cell: tuple[int, int] = min(
             (cell for cell in self.gums_coords if cell != p1_cell),
-            key=dist_to_center,
+            key=lambda cell: abs(cell[0] - center_x) + abs(cell[1] - center_y),
         )
         self.player = Player(
             x=p1_cell[0],
@@ -448,19 +461,18 @@ class Game:
         """Handle events"""
 
         exit_btn = self.buttons_map["exit_btn"]
-        back_btn = self.buttons_map["back_btn"]
+        quit_to_menu_btn = self.buttons_map["quit_to_menu_btn"]
         pause_btn = self.buttons_map["pause_btn"]
 
         for event in pygame.event.get():
             # Check for exit game
-            if event.type == pygame.QUIT or exit_btn.is_clicked(event):
+            if event.type == pygame.QUIT:
                 self.running = False
                 return
-                continue
 
-            if back_btn.is_clicked(event):
-                self.state = State.MENU
-                continue
+            # if quit_to_menu_btn.is_clicked(event):
+            #     self.state = State.MENU
+            #     continue
 
             # C H E A T E - M O D E
             if event.type == pygame.KEYDOWN:
@@ -505,9 +517,12 @@ class Game:
 
             # User inside menu
             if self.state == State.MENU:
+                if exit_btn.is_clicked(event):
+                    self.running = False
+                    return
                 self._handle_menu_event(event)
             elif self.state in (State.INSTRUCTIONS, State.HIGHSCORES):
-                if back_btn.is_clicked(event):
+                if quit_to_menu_btn.is_clicked(event):
                     self.state = State.MENU
             elif self.state == State.PLAYING:
                 if (
@@ -574,8 +589,9 @@ class Game:
             event: Pygame event
         """
         submitted = self.name_input.handle_event(event)
-        submit_btn: Button = self.buttons_map["submit_btn"]
+        submit_btn = self.buttons_map["submit_btn"]
 
+        assert isinstance(submit_btn, Button)
         if submitted or submit_btn.is_clicked(event):
             self._save_highscore(
                 self.name_input.text.strip(), self.pending_score
@@ -801,6 +817,10 @@ class Game:
         for btn in menu_buttons:
             btn.draw(self.screen)
 
+        # Draw the ms pacwoman
+        self.screen.blit(self.pacwoman_img, self.pacwoman_rect)
+
+
     def _draw_instructions(self) -> None:
         """Draws the instructions screen"""
         self.screen.fill((0, 0, 0))
@@ -815,19 +835,22 @@ class Game:
             "Clear every pellet to finish the level.",
             "Press ESC to pause at any time.",
         ]
-        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 14)
+        text_font = self._get_font("./fonts/press/PressStart2P.ttf", 18)
         for i, line in enumerate(lines):
             surf = text_font.render(line, False, "white")
-            rect = surf.get_rect(center=(self.SCREEN_WIDTH // 2, 150 + i * 40))
+            rect = surf.get_rect(center=(self.SCREEN_WIDTH // 2, 300 + i * 40))
             self.screen.blit(surf, rect)
 
-        back_btn = self.buttons_map["back_btn"]
-        back_btn.draw(self.screen)
+        quit_to_menu_btn = self.buttons_map["quit_to_menu_btn"]
+        quit_to_menu_btn.draw(self.screen)
 
     def _draw_highscores(self) -> None:
         """Draws the highscores screen"""
         self.screen.fill((0, 0, 0))
         self._draw_title("Top Players")
+
+        quit_to_menu_btn = self.buttons_map["quit_to_menu_btn"]
+        quit_to_menu_btn.draw(self.screen)
 
         players: list = sorted(
             self._load_highscores(), key=lambda p: -p["score"]
@@ -883,8 +906,6 @@ class Game:
                 #     score_surf.get_rect(topleft=(500, 130 + idx * 30)),
                 # )
 
-        back_btn = self.buttons_map["back_btn"]
-        back_btn.draw(self.screen)
 
     def _draw_enter_name(self) -> None:
         """Draws the enter name screen after a game is over"""
@@ -967,8 +988,10 @@ class Game:
         timer_surf = self.level_panel_font.render(
             f"Timer: {max(self.time_left, 0) // 1000}", False, "white"
         )
+        cur_level = self.level_number + 1
+        total_levels = len(self.levels)
         level_surf = self.level_panel_font.render(
-            f"Level: {self.level_number + 1}/{len(self.levels)}", False, "white"
+            f"Level: {cur_level}/{total_levels}", False, "white"
         )
 
         # pygame.draw.line(

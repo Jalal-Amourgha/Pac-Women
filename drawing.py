@@ -9,7 +9,7 @@ class Drawing:
     def __init__(
         self,
         offset_x: int,
-        super_gums_coords: set[tuple[int, int]],
+        super_gums_coords: list[tuple[int, int]],
         pattern_42_coords: set[tuple[int, int]],
     ) -> None:
         """Initializes the drawing object"""
