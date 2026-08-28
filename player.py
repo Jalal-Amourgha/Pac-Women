@@ -129,7 +129,7 @@ class Player(pygame.sprite.Sprite):
             # Initialize src_img with the current frame
             src_img = self.frames[self.frame_index]
 
-        # Chec if the player has eaten a gum
+        # Check if the player has eaten a gum
         pos = (self.x, self.y)
         if pos not in self.moves and pos in self.gums_coords:
             self.eat_dot_sound.play()
