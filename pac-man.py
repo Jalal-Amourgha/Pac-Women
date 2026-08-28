@@ -1,8 +1,5 @@
 # TODO: ADD A RESTART BUTTON AFTER THE GAME IS OVER
-
 # TODO: LAUGH AT THE PLAYER IF ITS DIE WITH A SMALL SCORE
-# TODO: CHECK IF THE SUPER GUM IS REGENERATED
-# FIX: SOMETIME THE BACK TO MENU BUTTON IS QUITTING THE GAME
 # TODO: AFTER PLAYER DIE HE SHOULD BE UNVISIBLE OR UNTOUCHABLE FOR 2 1 OR 2 SEC
 import json
 import math
@@ -115,9 +112,9 @@ class Game:
         self.game_win_sound = pygame.mixer.Sound(
             "./assets/sounds/pac-man-win.wav"
         )
-        # self.eat_ghost_sound = pygame.mixer.Sound(
-        #     "./assets/sounds/pac-man-eat-ghost.mp3"
-        # )
+        self.eat_ghost_sound = pygame.mixer.Sound(
+            "./assets/sounds/eating-ghost.wav"
+        )
         # self.eat_pacgum_sound = pygame.mixer.Sound(
         #     "./assets/sounds/pac-man-eat-pacgum.mp3"
         # )
@@ -691,6 +688,7 @@ class Game:
                 ghost.alive = False
                 ghost.died_time = self.now()
                 ghost.x, ghost.y = self.corner_coords[ghost.id]
+                self.eat_ghost_sound.play()
             elif not self.invisible:
                 self.player_die_sound.play()
                 # IF YOU WANT TO BECOME INVISIBLE PRESS CRTL + 1
