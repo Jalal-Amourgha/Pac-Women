@@ -1,10 +1,11 @@
 import json
 import sys
+import os
+
 from enum import Enum, auto
 from pathlib import Path
 
 from custom_print import print_red, print_yellow
-from os import path
 
 # TODO: REPLACE ALL THOSE CONFIG TO BE COMING FROM A CONFIG FILE
 CELL_SIZE = 40
@@ -93,14 +94,17 @@ def read_config() -> dict:
 
     # Detect if the program is bundled (packaged) or not.
     if len(sys.argv) == 1:
-        path_to_config = Path(
-            path.abspath(path.join(path.dirname(__file__), 'config.json'))
-        )
+        # Try to find config.json automatically in the script's directory
+        config_path = Path(writable_path('config.json'))
 
-        if path_to_config.is_file():
-            file_name = path_to_config
+        if config_path.is_file():
+            file_name = config_path
         else:
             print_yellow("Warning: Please provide a config file")
+            print_yellow(
+                f"Usage: python pac-man.py [config_file] "
+                f"(looked for: {config_path})"
+            )
             sys.exit(1)
 
     elif len(sys.argv) == 2:
@@ -127,3 +131,33 @@ def read_config() -> dict:
         sys.exit(1)
 
     return config
+
+
+def resource_path(relative_path: str) -> str:
+    """Get path to resource, works for dev and for PyInstaller bundled exe.
+
+    Resources (assets, fonts) are bundled INSIDE the executable/bundle.
+    """
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        # Running as bundled PyInstaller exe - resources inside bundle
+        base_path: str = sys._MEIPASS
+    else:
+        # Running as script - resources are in script directory
+        base_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+    return os.path.join(base_path, relative_path)
+
+
+def writable_path(relative_path: str) -> str:
+    """Path for writable files (config, highscores).
+
+    In a one-folder bundle: files inside bundle folder (sys._MEIPASS).
+    In development: files are next to the script.
+    """
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        # Running as bundled PyInstaller one-folder bundle
+        # Config and highscores bundled inside and can be written to
+        return os.path.join(sys._MEIPASS, relative_path)
+    else:
+        # Running as script - use script's directory
+        script_dir: str = os.path.dirname(os.path.abspath(sys.argv[0]))
+        return os.path.join(script_dir, relative_path)
