@@ -66,7 +66,7 @@ uv run python3 pac-man.py config.json
 
 Generative AI was used to assist in the development and refinement of this project:
 
-- **Core:** Assisted in identifying a game-crashing bugs
+- **Core:** Assisted in identifying game-crashing bugs
 - **Type Hinting and Static Typing:** Assisted in adding strict type hints to function signatures and return types across the files
 - **Comprehensive Documentation:** Assisted in drafting standardized docstrings for classes and methods where they were missing or empty.
 
@@ -83,7 +83,7 @@ The game's behavior, maps, and player details are fully customizable via a JSON 
   - points_per_pacgum (NonNegativeInt, default 15): Points rewarded per standard pellet.
   - points_per_super_pacgum (NonNegativeInt, default 50): Points rewarded for super gums.
   - highscore_filename (str, default "highscores.json"): Path to load and store high scores.
-  - level_max_time (NonNegativeInt, default 90): Time limit for each level (in seconds).
+  - level_max_time (NonNegativeInt, default 90000): Time limit for each level (in milliseconds).
 - **maps**: A list of maps representing game levels.
   - Each map configures width (NonNegativeInt, default 23) and height (NonNegativeInt, default 14).
 
@@ -117,7 +117,7 @@ The codebase is structured modularly:
 
 - **Game class (pac-man.py):** The orchestrator of the entire lifecycle. Initializes Pygame surfaces, handles event polling, processes updates, triggers collision checks, plays sounds, and handles state transitions.
 - **Player class (player.py):** Inherits from pygame.sprite.Sprite. Manages coordinates, keyboard controls, sprite animation frames (mouth open/closed, rotation based on direction), score increments, and tracks visited coordinates to prevent re-eating pellets.
-- **Ghost class (ghost.py):** Represents the enemy ghosts. Implements chase behaviors targeting players via BFS, fleeing/fearing behaviors when edible, and a random wander fallback.
+- **Ghost class (ghost.py):** Represents the enemy ghosts. Implements chase behaviors targeting players via BFS, a fleeing behavior when edible, and a random wander fallback.
 - **SuperGum class (superGum.py):** Represents super gums placed at the four corners of the maze that grant the players temporary edible power.
 - **Drawing class (drawing.py):** Decodes the cell bitmasks (e.g. wall bits 1, 2, 4, 8) and draws the maze walls and standard pellets on the Pygame surface.
 - **Button (button.py) & TextInput (text.py):** Reusable UI widgets for menu selection, click detection, hovering visual feedback, and text field inputs with blinking cursors.
@@ -127,5 +127,4 @@ The codebase is structured modularly:
 
 The progress and roadmap of the project were tracked using a localized, plain-text task board.
 
-- **How we managed:** All developer features, linter goals, deadlines, and bugs were listed and updated in a TODO.md file located at the root of the repository.
-- **Directory link:** You can view the dedicated project tasks directly in [TODO.md](./TODO.md).
+- **How we managed:** All developer features, linter goals, deadlines, and bugs were listed and updated in a TODO.md file during development, which helped the dev to manage the work.

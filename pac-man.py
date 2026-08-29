@@ -74,7 +74,7 @@ class Game:
         self.pause_offset: int = 0
         self.paused_since = None
 
-        self.maze = None
+        self.maze: list[list[int]] | None = None
         self.drawing: Drawing | None = None
         self.player: Player | None = None
         self.second_player: Player | None = None
@@ -283,11 +283,11 @@ class Game:
 
     def _start_new_run(self) -> None:
         """Reset the run state and start a fresh run"""
-        self.level_number: int = 0
-        self.lives: int = self.initial_lives
-        self.total_score: int = 0
-        self.pause_offset: int = 0
-        self.paused_since: int | None = None
+        self.level_number = 0
+        self.lives = self.initial_lives
+        self.total_score = 0
+        self.pause_offset = 0
+        self.paused_since = None
         self._new_level()
         self.very_start_game_sound.stop()
         self.round_start_sound.play()
@@ -439,9 +439,14 @@ class Game:
         """Load highscores"""
         try:
             with open(self.highscore_filename) as f:
-                return json.load(f).get("players", [])
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            print_red({e})
+                data = json.load(f)
+                if isinstance(data, dict):
+                    res = data.get("players", [])
+                    if isinstance(res, list):
+                        return res
+                return []
+        except (FileNotFoundError, json.JSONDecodeError):
+            # print_red({e})
             return []
         except Exception as e:
             print_red({e})
@@ -489,17 +494,20 @@ class Game:
                     if event.key == pygame.K_3:
                         # P L A Y E R - I N C R E A S E - S P E E D
                         print("Ctrl + 3 was pressed!")
+                        assert self.player is not None
                         self.player.speed = max(self.player.speed - 10, 10)
 
                     if event.key == pygame.K_4:
                         # P L A Y E R - S K I P - L E V E L
                         print("Ctrl + 4 was pressed!")
+                        assert self.player is not None
                         self.player.gums_eated += self.rows * self.cols
                         self.check_win()
 
                     if event.key == pygame.K_5:
                         # P L A Y E R - I N C R E A S E - S C O R E by 1000
                         print("Ctrl + 5 was pressed!")
+                        assert self.player is not None
                         self.player.score += 1000
 
                     if event.key == pygame.K_6:
@@ -514,18 +522,18 @@ class Game:
 
             # User inside menu
             if self.state == State.MENU:
-                if exit_btn.is_clicked(event):
+                if exit_btn.is_clicked(event):  # type: ignore
                     self.running = False
                     return
                 self._handle_menu_event(event)
             elif self.state in (State.INSTRUCTIONS, State.HIGHSCORES):
-                if quit_to_menu_btn.is_clicked(event):
+                if quit_to_menu_btn.is_clicked(event):  # type: ignore
                     self.state = State.MENU
             elif self.state == State.PLAYING:
                 if (
                     event.type == pygame.KEYDOWN
                     and event.key == pygame.K_ESCAPE
-                    or pause_btn.is_clicked(event)
+                    or pause_btn.is_clicked(event)  # type: ignore
                 ):
                     self._enter_pause()
             elif self.state == State.PAUSED:
@@ -542,25 +550,25 @@ class Game:
         """
 
         # Extract the buttons
-        play_btn: Button = self.buttons_map["play_btn"]
-        dual_playing_btn: Button = self.buttons_map["dual_playing_btn"]
-        instructions_btn: Button = self.buttons_map["instructions_btn"]
-        leaderboard_btn: Button = self.buttons_map["leaderbord_btn"]
-        exit_btn: Button = self.buttons_map["exit_btn"]
+        play_btn = self.buttons_map["play_btn"]
+        dual_playing_btn = self.buttons_map["dual_playing_btn"]
+        instructions_btn = self.buttons_map["instructions_btn"]
+        leaderboard_btn = self.buttons_map["leaderbord_btn"]
+        exit_btn = self.buttons_map["exit_btn"]
 
-        if play_btn.is_clicked(event):
+        if play_btn.is_clicked(event):  # type: ignore[union-attr]
             # Set dual_playing back to False
             self.dual_playing = False
             self._start_new_run()
-        elif dual_playing_btn.is_clicked(event):
+        elif dual_playing_btn.is_clicked(event):  # type: ignore[union-attr]
             self.dual_playing = True
             self._start_new_run()
-        elif instructions_btn.is_clicked(event):
+        elif instructions_btn.is_clicked(event):  # type: ignore[union-attr]
             self.state = State.INSTRUCTIONS
-        elif leaderboard_btn.is_clicked(event):
+        elif leaderboard_btn.is_clicked(event):  # type: ignore[union-attr]
             self.state = State.HIGHSCORES
 
-        if exit_btn.is_clicked(event):
+        if exit_btn.is_clicked(event):  # type: ignore[union-attr]
             self.running = False
 
     def _handle_pause_event(self, event: pygame.event.Event) -> None:
@@ -572,11 +580,11 @@ class Game:
         if (
             event.type == pygame.KEYDOWN
             and event.key == pygame.K_ESCAPE
-            or pause_btn.is_clicked(event)
-            or resume_btn.is_clicked(event)
+            or pause_btn.is_clicked(event)  # type: ignore[union-attr]
+            or resume_btn.is_clicked(event)  # type: ignore[union-attr]
         ):
             self._resume()
-        elif quit_to_menu_btn.is_clicked(event):
+        elif quit_to_menu_btn.is_clicked(event):  # type: ignore[union-attr]
             self.state = State.MENU
 
     def _handle_enter_name_event(self, event: pygame.event.Event) -> None:
@@ -609,6 +617,7 @@ class Game:
         assert self.players  # silent lints
 
         for player in self.players:
+            assert self.maze is not None
             player.update(self.maze, now)
 
         # Update ghosts if they not freezed, (freezed immediately after
@@ -648,7 +657,7 @@ class Game:
             if not player.edible:
                 continue
 
-            elapsed = self.now() - player.last_time_edible
+            elapsed = self.now() - player.last_time_edible  # type: ignore
             if elapsed >= EDIBLE_DURATION_MS:
                 player.edible = False
                 continue
@@ -692,11 +701,9 @@ class Game:
             elif not self.invisible:
                 self.player_die_sound.play()
                 # IF YOU WANT TO BECOME INVISIBLE PRESS CRTL + 1
-                # self.lives -= 1  # TODO: TRIGGER LATER
+                self.lives -= 1
                 if self.lives <= 0:
-                    # # self.game_over_sound.play()
-                    # if total_score <= 100:
-                    #     # Display sacrasme text
+                    # self.game_over_sound.play()
 
                     self.total_score += sum(p.score for p in self.players)
                     self._end_run(False)
@@ -818,7 +825,6 @@ class Game:
         # Draw the ms pacwoman
         self.screen.blit(self.pacwoman_img, self.pacwoman_rect)
 
-
     def _draw_instructions(self) -> None:
         """Draws the instructions screen"""
         self.screen.fill((0, 0, 0))
@@ -904,7 +910,6 @@ class Game:
                 #     score_surf.get_rect(topleft=(500, 130 + idx * 30)),
                 # )
 
-
     def _draw_enter_name(self) -> None:
         """Draws the enter name screen after a game is over"""
 
@@ -955,6 +960,8 @@ class Game:
         for player in self.players:
             eaten_cells |= player.moves
 
+        assert self.maze is not None
+        assert self.drawing is not None
         for y, row in enumerate(self.maze):
             for x, cell in enumerate(row):
                 self.drawing.draw_cell(self.screen, cell, x, y, eaten_cells)

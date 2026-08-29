@@ -1,5 +1,3 @@
-import sys
-
 from pydantic import BaseModel, Field, NonNegativeInt
 
 from custom_print import print_yellow
@@ -35,7 +33,7 @@ class PlayerConfig(BaseModel):
     points_per_pacgum: NonNegativeInt = 15
     points_per_super_pacgum: NonNegativeInt = 50
     highscore_filename: str = "highscores.json"
-    level_max_time: NonNegativeInt = 90
+    level_max_time: NonNegativeInt = 90000
 
 
 class MapConfig(BaseModel):
@@ -55,7 +53,8 @@ class Config_Validator(BaseModel):
 
 
 def check_missing_config_data(config: dict) -> dict:
-    """Check structural integrity of configuration and strip None or negative values.
+    """Check structural integrity of configuration and strip
+    None or negative values.
 
     Keys with None or negative values are removed from the dictionary so that
     Pydantic automatically falls back to default field values.
@@ -67,7 +66,8 @@ def check_missing_config_data(config: dict) -> dict:
         dict: The cleaned configuration dictionary.
 
     Raises:
-        ValueError: If payload or top-level sections are missing or have invalid types.
+        ValueError: If payload or top-level sections
+        are missing or have invalid types.
     """
     if not isinstance(config, dict):
         raise ValueError(
@@ -139,10 +139,6 @@ def check_missing_config_data(config: dict) -> dict:
 
 def handle_config_validation() -> dict:
     """Handle the config file and validate it"""
-
-    if len(sys.argv) < 2:
-        print_yellow("Warning: Please provide a config file")
-        sys.exit(1)
 
     # Read config file, validate it, convert it back to dict
     config_data = read_config()
