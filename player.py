@@ -60,7 +60,7 @@ class Player(pygame.sprite.Sprite):
         # across every instance that doesn't pass one explicitly -- a classic
         # Python pitfall. Default to None and create a fresh set here.
         self.gums_coords = gums_coords if gums_coords is not None else set()
-        self.last_time_edible = None
+        self.last_time_edible: int | None = None
 
         self.rect = self.image.get_rect(
             center=cell_to_pixel_center(self.x, self.y, self.offset_x)
@@ -140,7 +140,8 @@ class Player(pygame.sprite.Sprite):
         if moved:
             self.direction = new_direction
 
-            # TODO: UPDATE LATER TO STORE THE ROTATED AND JUST INSTEAD OF CALCULATING IT EACH TIME.
+            # TODO: UPDATE LATER TO STORE THE ROTATED AND JUST
+            # INSTEAD OF CALCULATING IT EACH TIME.
             self.image = pygame.transform.rotate(
                 src_img, ROTATION_FOR_DIRECTION[new_direction]
             )

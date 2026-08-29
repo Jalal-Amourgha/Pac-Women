@@ -104,7 +104,7 @@ def read_config() -> dict:
             sys.exit(1)
 
     elif len(sys.argv) == 2:
-        file_name = sys.argv[1]
+        file_name = Path(sys.argv[1])
 
     else:
         print_yellow("Error: Invalid number of arguments")
