@@ -5,6 +5,7 @@ from utils import (
     ROTATION_FOR_DIRECTION,
     can_move,
     cell_to_pixel_center,
+    resource_path,
 )
 
 
@@ -26,12 +27,14 @@ class Player(pygame.sprite.Sprite):
 
         # Load player frames
         base_img = pygame.image.load(
-            "./assets/images/player_frame1.jpg"
+            resource_path("assets/images/player_frame1.jpg")
         ).convert_alpha()
-        action_img = pygame.image.load("./assets/images/player_frame2.jpg")
+        action_img = pygame.image.load(
+            resource_path("assets/images/player_frame2.jpg")
+        )
 
         active_img = pygame.image.load(
-            "./assets/images/activated.jpg"
+            resource_path("assets/images/activated.jpg")
         ).convert_alpha()
 
         self.base_img = pygame.transform.scale(base_img, (25, 25))
@@ -75,7 +78,7 @@ class Player(pygame.sprite.Sprite):
 
         # Sounds
         self.eat_dot_sound = pygame.mixer.Sound(
-            "./assets/sounds/pacman-eat-dots.wav"
+            resource_path("assets/sounds/pacman-eat-dots.wav")
         )
 
     def update(self, maze: list[list[int]], now: int) -> None:

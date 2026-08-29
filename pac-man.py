@@ -19,6 +19,8 @@ from utils import (
     EDIBLE_BLINK_AT_MS,
     EDIBLE_DURATION_MS,
     State,
+    resource_path,
+    writable_path,
 )
 from validation import handle_config_validation
 
@@ -100,20 +102,20 @@ class Game:
 
         # Sound
         self.very_start_game_sound = pygame.mixer.Sound(
-            "./assets/sounds/pac-man-very-start-of-game.wav"
+            resource_path("assets/sounds/pac-man-very-start-of-game.wav")
         )
         self.round_start_sound = pygame.mixer.Sound(
-            "./assets/sounds/pac-man-start-run.wav"
+            resource_path("assets/sounds/pac-man-start-run.wav")
         )
         self.round_start_delay = 0
         self.player_die_sound = pygame.mixer.Sound(
-            "./assets/sounds/pac-man-die.wav"
+            resource_path("assets/sounds/pac-man-die.wav")
         )
         self.game_win_sound = pygame.mixer.Sound(
-            "./assets/sounds/pac-man-win.wav"
+            resource_path("assets/sounds/pac-man-win.wav")
         )
         self.eat_ghost_sound = pygame.mixer.Sound(
-            "./assets/sounds/eating-ghost.wav"
+            resource_path("assets/sounds/eating-ghost.wav")
         )
         # self.eat_pacgum_sound = pygame.mixer.Sound(
         #     "./assets/sounds/pac-man-eat-pacgum.mp3"
@@ -127,11 +129,13 @@ class Game:
         self.level_panel_font = self._get_font(
             "./fonts/press/PressStart2P.ttf", 16
         )
-        live_surf = pygame.image.load("assets/images/life_heart.png").convert()
+        live_surf = pygame.image.load(
+            resource_path("assets/images/life_heart.png")
+        ).convert()
         self.live_surf = pygame.transform.scale(live_surf, (25, 25))
 
         self.pacwoman_img = pygame.image.load(
-            "assets/images/ms_pacman.png"
+            resource_path("assets/images/ms_pacman.png")
         ).convert_alpha()
         self.pacwoman_img = pygame.transform.scale(
             self.pacwoman_img, (539, 874)
@@ -150,7 +154,7 @@ class Game:
         """Create the font image if not exists"""
         key = (path, size)
         if key not in self._fonts:
-            self._fonts[key] = pygame.font.Font(path, size)
+            self._fonts[key] = pygame.font.Font(resource_path(path), size)
         return self._fonts[key]
 
     def _centered_x(self, width: int = 220) -> int:
@@ -438,7 +442,7 @@ class Game:
     def _load_highscores(self) -> list:
         """Load highscores"""
         try:
-            with open(self.highscore_filename) as f:
+            with open(writable_path(self.highscore_filename)) as f:
                 data = json.load(f)
                 if isinstance(data, dict):
                     res = data.get("players", [])
@@ -456,7 +460,7 @@ class Game:
         """Saves the highscore"""
         players = self._load_highscores()
         players.append({"username": username or "Player", "score": score})
-        with open(self.highscore_filename, "w") as f:
+        with open(writable_path(self.highscore_filename), "w") as f:
             json.dump({"players": players}, f, indent=2)
 
     def events(self) -> None:

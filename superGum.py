@@ -1,6 +1,6 @@
 import pygame
 
-from utils import cell_to_pixel_center
+from utils import cell_to_pixel_center, resource_path
 
 
 class SuperGum:
@@ -19,7 +19,7 @@ class SuperGum:
 
     def _get_img(self, id: int) -> pygame.Surface:
         """Load and scale the super gum image"""
-        img_path = f"./assets/images/gum_{id + 1}.jpg"
+        img_path = resource_path(f"assets/images/gum_{id + 1}.jpg")
         gum_img = pygame.image.load(img_path).convert_alpha()
         return pygame.transform.scale(gum_img, (25, 25))
 
