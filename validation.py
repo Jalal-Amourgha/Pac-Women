@@ -33,7 +33,7 @@ class PlayerConfig(BaseModel):
     points_per_pacgum: NonNegativeInt = 15
     points_per_super_pacgum: NonNegativeInt = 50
     highscore_filename: str = "highscores.json"
-    level_max_time: NonNegativeInt = 90
+    level_max_time: NonNegativeInt = 90000
 
 
 class MapConfig(BaseModel):
