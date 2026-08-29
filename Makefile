@@ -10,6 +10,7 @@ debug:
 clean:
 	@rm -rf __pycache__
 	@rm -rf .mypy_cache
+	@rm -rf .ruff_cache
 
 lint:
 	@flake8 . 
