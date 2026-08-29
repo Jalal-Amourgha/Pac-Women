@@ -1,8 +1,10 @@
 import json
 import sys
 from enum import Enum, auto
+from pathlib import Path
 
-from custom_print import print_red
+from custom_print import print_red, print_yellow
+from os import path
 
 # TODO: REPLACE ALL THOSE CONFIG TO BE COMING FROM A CONFIG FILE
 CELL_SIZE = 40
@@ -89,7 +91,25 @@ def read_config() -> dict:
         dict: config
     """
 
-    file_name: str = sys.argv[1]
+    # Detect if the program is bundled (packaged) or not.
+    if len(sys.argv) == 1:
+        path_to_config = Path(
+            path.abspath(path.join(path.dirname(__file__), 'config.json'))
+        )
+
+        if path_to_config.is_file():
+            file_name = path_to_config
+        else:
+            print_yellow("Warning: Please provide a config file")
+            sys.exit(1)
+
+    elif len(sys.argv) == 2:
+        file_name = sys.argv[1]
+
+    else:
+        print_yellow("Error: Invalid number of arguments")
+        print_yellow("Usage: python main.py [config_file]")
+        sys.exit(1)
 
     try:
         with open(file_name, "r") as f:
