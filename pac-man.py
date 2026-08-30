@@ -486,42 +486,35 @@ class Game:
                 if pygame.key.get_mods() & pygame.KMOD_CTRL:
                     if event.key == pygame.K_1:
                         # P L A Y E R - I N V I S I B L E
-                        print("Ctrl + 1 was pressed!")
                         self.invisible = not self.invisible
 
                     if event.key == pygame.K_2:
                         # G H O S T - F R E E Z E D
-                        print("Ctrl + 2 was pressed!")
                         for ghost in self.ghosts:
                             ghost.freezed = not ghost.freezed
 
                     if event.key == pygame.K_3:
                         # P L A Y E R - I N C R E A S E - S P E E D
-                        print("Ctrl + 3 was pressed!")
                         assert self.player is not None
                         self.player.speed = max(self.player.speed - 10, 10)
 
                     if event.key == pygame.K_4:
                         # P L A Y E R - S K I P - L E V E L
-                        print("Ctrl + 4 was pressed!")
                         assert self.player is not None
                         self.player.gums_eated += self.rows * self.cols
                         self.check_win()
 
                     if event.key == pygame.K_5:
                         # P L A Y E R - I N C R E A S E - S C O R E by 1000
-                        print("Ctrl + 5 was pressed!")
                         assert self.player is not None
                         self.player.score += 1000
 
                     if event.key == pygame.K_6:
                         # I M O R T A L E
-                        print("Ctrl + 6 was pressed!")
                         self.lives = math.inf
 
                     if event.key == pygame.K_7:
                         # S T O P - T I M E
-                        print("Ctrl + 7 was pressed!")
                         self.stop_time = not self.stop_time
 
             # User inside menu
